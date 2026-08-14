@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { createProjectRecord } from "@/app/actions";
 import ClientSearchSelect from "./ClientSearchSelect";
 
@@ -12,10 +12,7 @@ type ClientOption = {
 };
 
 export default async function NewProjectPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("clients")

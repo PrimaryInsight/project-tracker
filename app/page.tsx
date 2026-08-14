@@ -1,14 +1,21 @@
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import BoardClient from "@/app/BoardClient";
+import LogoutButton from "@/app/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
 
   const { data: projects, error } = await supabase
     .from("project_cards")
@@ -17,7 +24,13 @@ export default async function Home() {
 
   return (
     <main className="p-8">
-      <h1 className="mb-8 text-3xl font-bold">Project Tracker</h1>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Project Tracker</h1>
+          <p className="mt-1 text-sm text-slate-600">Signed in as {user.email}</p>
+        </div>
+        <LogoutButton />
+      </div>
 
       <div className="mb-6 flex gap-4">
         <Link
