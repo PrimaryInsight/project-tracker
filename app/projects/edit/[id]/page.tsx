@@ -1,160 +1,283 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateProjectRecord } from "@/app/actions";
+import { addProjectNote, updateProjectDetails } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
-type EditProjectPageProps = {
+type ProjectDetailsPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export default async function EditProjectPage({
-  params,
-}: EditProjectPageProps) {
-  const { id } = await params;
+function formatTimestamp(value: string) {
+  return new Intl.DateTimeFormat("en-NZ", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Pacific/Auckland",
+  }).format(new Date(value));
+}
 
+export default async function ProjectDetailsPage({
+  params,
+}: ProjectDetailsPageProps) {
+  const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { data: project, error } = await supabase
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: project, error: projectError } = await supabase
     .from("project_cards")
     .select(
-      "id, project_name, description, estimated_project_value, next_follow_up_date, project_manager, company_name, contact_name"
+      "id, project_name, description, current_stage, estimated_project_value, next_follow_up_date, project_manager, company_name, contact_name, phone, mobile, email, quoted_date, project_start_date, install_date, invoice_date"
     )
     .eq("id", id)
     .single();
 
-  if (error || !project) {
+  if (projectError || !project) {
     notFound();
   }
 
+  const { data: notes, error: notesError } = await supabase
+    .from("project_notes")
+    .select("id, note, created_at, created_by")
+    .eq("project_id", id)
+    .order("created_at", { ascending: false });
+
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Edit Project</h1>
+    <main className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold">Project Details</h1>
+            <p className="mt-1 text-slate-600">
+              {project.company_name} | {project.contact_name}
+            </p>
+          </div>
 
           <Link
             href="/"
-            className="rounded border border-gray-300 bg-white px-4 py-2 hover:bg-gray-100"
+            className="rounded border border-slate-300 bg-white px-4 py-2 hover:bg-slate-100"
           >
             Back to Board
           </Link>
         </div>
 
-        <form
-          action={updateProjectRecord}
-          className="space-y-5 rounded-lg border bg-white p-6 shadow-sm"
-        >
-          <input type="hidden" name="project_id" value={project.id} />
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <section>
+            <form
+              action={updateProjectDetails}
+              className="space-y-5 rounded-lg border bg-white p-6 shadow-sm"
+            >
+              <input type="hidden" name="project_id" value={project.id} />
 
-          <div>
-            <div className="mb-1 block font-medium">Client</div>
-            <div className="rounded border border-gray-200 bg-gray-100 px-3 py-2 text-gray-700">
-              {project.company_name} | {project.contact_name}
+              <div className="rounded border border-slate-200 bg-slate-100 p-3 text-sm text-slate-700">
+                <div>
+                  <span className="font-medium">Client:</span>{" "}
+                  {project.company_name}
+                </div>
+                <div>
+                  <span className="font-medium">Contact:</span>{" "}
+                  {project.contact_name}
+                </div>
+                <div>
+                  <span className="font-medium">Phone:</span>{" "}
+                  {project.mobile || project.phone || "Not set"}
+                </div>
+                <div>
+                  <span className="font-medium">Email:</span>{" "}
+                  {project.email}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="project_name"
+                  className="mb-1 block font-medium"
+                >
+                  Project Name *
+                </label>
+                <input
+                  id="project_name"
+                  name="project_name"
+                  required
+                  defaultValue={project.project_name}
+                  className="w-full rounded border border-slate-300 px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="description"
+                  className="mb-1 block font-medium"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={5}
+                  defaultValue={project.description || ""}
+                  className="w-full rounded border border-slate-300 px-3 py-2"
+                />
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="project_manager"
+                    className="mb-1 block font-medium"
+                  >
+                    Project Manager *
+                  </label>
+                  <select
+                    id="project_manager"
+                    name="project_manager"
+                    required
+                    defaultValue={project.project_manager || ""}
+                    className="w-full rounded border border-slate-300 px-3 py-2"
+                  >
+                    <option value="" disabled>
+                      Select a project manager
+                    </option>
+                    <option value="Andrew Curtis">Andrew Curtis</option>
+                    <option value="Melissa Sullivan">Melissa Sullivan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="current_stage"
+                    className="mb-1 block font-medium"
+                  >
+                    Current Stage *
+                  </label>
+                  <select
+                    id="current_stage"
+                    name="current_stage"
+                    required
+                    defaultValue={project.current_stage}
+                    className="w-full rounded border border-slate-300 px-3 py-2"
+                  >
+                    <option value="catchup">Initial Catch-up</option>
+                    <option value="quote">Quote Sent</option>
+                    <option value="followup">Follow-up</option>
+                    <option value="started">Project Started</option>
+                    <option value="install">Install</option>
+                    <option value="invoiced">Invoiced</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="estimated_project_value"
+                    className="mb-1 block font-medium"
+                  >
+                    Estimated Project Value
+                  </label>
+                  <input
+                    id="estimated_project_value"
+                    name="estimated_project_value"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={project.estimated_project_value ?? ""}
+                    className="w-full rounded border border-slate-300 px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="next_follow_up_date"
+                    className="mb-1 block font-medium"
+                  >
+                    Next Follow-up Date
+                  </label>
+                  <input
+                    id="next_follow_up_date"
+                    name="next_follow_up_date"
+                    type="date"
+                    defaultValue={project.next_follow_up_date || ""}
+                    className="w-full rounded border border-slate-300 px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="rounded bg-blue-700 px-5 py-2 font-medium text-white hover:bg-blue-800"
+              >
+                Save Project Details
+              </button>
+            </form>
+          </section>
+
+          <section className="rounded-lg border bg-white p-6 shadow-sm lg:sticky lg:top-6">
+            <h2 className="text-2xl font-bold">Notes</h2>
+
+            <form action={addProjectNote} className="mt-4 space-y-3">
+              <input type="hidden" name="project_id" value={project.id} />
+
+              <label htmlFor="note" className="block font-medium">
+                New Note
+              </label>
+              <textarea
+                id="note"
+                name="note"
+                required
+                rows={4}
+                placeholder="Add the latest project update..."
+                className="w-full rounded border border-slate-300 px-3 py-2"
+              />
+              <button
+                type="submit"
+                className="rounded bg-emerald-700 px-5 py-2 font-medium text-white hover:bg-emerald-800"
+              >
+                Add Note
+              </button>
+            </form>
+
+            {notesError && (
+              <div className="mt-4 rounded border border-red-300 bg-red-50 p-3 text-red-700">
+                Unable to load notes: {notesError.message}
+              </div>
+            )}
+
+            <div className="mt-5 max-h-[calc(100vh-360px)] space-y-4 overflow-y-auto pr-2">
+              {!notes?.length && (
+                <div className="rounded-lg border bg-slate-50 p-5 text-slate-600">
+                  No notes have been added yet.
+                </div>
+              )}
+
+              {notes?.map((item) => (
+                <article
+                  key={item.id}
+                  className="rounded-lg border bg-slate-50 p-5"
+                >
+                  <div className="flex flex-wrap justify-between gap-2 text-sm text-slate-500">
+                    <span>{formatTimestamp(item.created_at)}</span>
+                    <span>{item.created_by || "Authenticated user"}</span>
+                  </div>
+                  <p className="mt-3 whitespace-pre-wrap text-slate-800">
+                    {item.note}
+                  </p>
+                </article>
+              ))}
             </div>
-            <p className="mt-1 text-sm text-gray-500">
-              The client relationship is read-only on this page.
-            </p>
-          </div>
-
-          <div>
-            <label htmlFor="project_name" className="mb-1 block font-medium">
-              Project Name *
-            </label>
-            <input
-              id="project_name"
-              name="project_name"
-              type="text"
-              required
-              defaultValue={project.project_name}
-              className="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="description" className="mb-1 block font-medium">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              defaultValue={project.description || ""}
-              className="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="project_manager" className="mb-1 block font-medium">
-              Project Manager *
-            </label>
-            <select
-              id="project_manager"
-              name="project_manager"
-              required
-              defaultValue={project.project_manager || ""}
-              className="w-full rounded border border-gray-300 px-3 py-2"
-            >
-              <option value="" disabled>
-                Select a project manager
-              </option>
-              <option value="Andrew Curtis">Andrew Curtis</option>
-              <option value="Melissa Sullivan">Melissa Sullivan</option>
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="estimated_project_value"
-              className="mb-1 block font-medium"
-            >
-              Estimated Project Value
-            </label>
-            <input
-              id="estimated_project_value"
-              name="estimated_project_value"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={project.estimated_project_value ?? ""}
-              className="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="next_follow_up_date"
-              className="mb-1 block font-medium"
-            >
-              Next Follow-up Date
-            </label>
-            <input
-              id="next_follow_up_date"
-              name="next_follow_up_date"
-              type="date"
-              defaultValue={project.next_follow_up_date || ""}
-              className="w-full rounded border border-gray-300 px-3 py-2"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
-
-            <Link
-              href="/"
-              className="rounded border border-gray-300 px-5 py-2 hover:bg-gray-100"
-            >
-              Cancel
-            </Link>
-          </div>
-        </form>
+          </section>
+        </div>
       </div>
     </main>
   );
