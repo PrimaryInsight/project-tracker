@@ -37,7 +37,7 @@ export default async function ProjectDetailsPage({
   const { data: project, error: projectError } = await supabase
     .from("project_cards")
     .select(
-      "id, project_name, description, current_stage, estimated_project_value, next_follow_up_date, project_manager, company_name, contact_name, phone, mobile, email, quoted_date, project_start_date, install_date, invoice_date"
+      "id, project_name, description, current_stage, project_value, next_follow_up_date, project_manager, company_name, contact_name, phone, mobile, email, quote_date, project_confirmed_date, install_planned_date, to_invoice_date"
     )
     .eq("id", id)
     .single();
@@ -79,24 +79,25 @@ export default async function ProjectDetailsPage({
             >
               <input type="hidden" name="project_id" value={project.id} />
 
-              <div className="rounded border border-slate-200 bg-slate-100 p-3 text-sm text-slate-700">
-                <div>
-                  <span className="font-medium">Client:</span>{" "}
-                  {project.company_name}
-                </div>
-                <div>
-                  <span className="font-medium">Contact:</span>{" "}
-                  {project.contact_name}
-                </div>
-                <div>
-                  <span className="font-medium">Phone:</span>{" "}
-                  {project.mobile || "Not set"}
-                </div>
-                <div>
-                  <span className="font-medium">Email:</span>{" "}
-                  {project.email}
-                </div>
-              </div>
+              <div className="rounded border border-slate-200 bg-slate-100 p-4">
+  <div className="text-xl font-semibold text-slate-900">
+    {project.company_name}
+  </div>
+
+  <div className="mt-1 text-lg text-slate-700">
+    Contact: {project.contact_name}
+  </div>
+
+  <div className="mt-3 text-base text-slate-700">
+    <div>
+      <span className="font-medium">Mobile:</span> {project.mobile || "Not set"}
+    </div>
+
+    <div>
+      <span className="font-medium">Email:</span> {project.email}
+    </div>
+  </div>
+</div>
 
               <div>
                 <label
@@ -167,13 +168,12 @@ export default async function ProjectDetailsPage({
                     defaultValue={project.current_stage}
                     className="w-full rounded border border-slate-300 px-3 py-2"
                   >
-                    <option value="catchup">Initial Catch-up</option>
-                    <option value="quote">Quote Sent</option>
+                    <option value="catchup">Meeting</option>
+                    <option value="quote">Quote</option>
                     <option value="followup">Follow-up</option>
-                    <option value="started">Project Started</option>
-                    <option value="install">Install</option>
-                    <option value="invoiced">Invoiced</option>
-                    <option value="completed">Completed</option>
+                    <option value="started">Project Confirmed</option>
+                    <option value="install">Install Planned</option>
+                    <option value="invoiced">To Invoice</option>
                   </select>
                 </div>
               </div>
@@ -181,18 +181,18 @@ export default async function ProjectDetailsPage({
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label
-                    htmlFor="estimated_project_value"
+                    htmlFor="project_value"
                     className="mb-1 block font-medium"
                   >
                     Estimated Project Value
                   </label>
                   <input
-                    id="estimated_project_value"
-                    name="estimated_project_value"
+                    id="project_value"
+                    name="project_value"
                     type="number"
                     min="0"
                     step="0.01"
-                    defaultValue={project.estimated_project_value ?? ""}
+                    defaultValue={project.project_value ?? ""}
                     className="w-full rounded border border-slate-300 px-3 py-2"
                   />
                 </div>
@@ -214,12 +214,23 @@ export default async function ProjectDetailsPage({
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="rounded bg-blue-700 px-5 py-2 font-medium text-white hover:bg-blue-800"
-              >
-                Save Project Details
-              </button>
+              <div className="flex gap-3">
+  <button
+    type="submit"
+    className="rounded bg-blue-700 px-5 py-2 font-medium text-white hover:bg-blue-800"
+  >
+    Save Project Details
+  </button>
+
+  <button
+    type="submit"
+    name="archive_project"
+    value="true"
+    className="rounded bg-red-700 px-5 py-2 font-medium text-white hover:bg-red-800"
+  >
+    Archive Project
+  </button>
+</div>
             </form>
           </section>
 

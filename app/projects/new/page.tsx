@@ -94,14 +94,14 @@ export default async function NewProjectPage() {
 
           <div>
             <label
-              htmlFor="estimated_project_value"
+              htmlFor="project_value"
               className="mb-1 block font-medium"
             >
               Estimated Project Value
             </label>
             <input
-              id="estimated_project_value"
-              name="estimated_project_value"
+              id="project_value"
+              name="project_value"
               type="number"
               min="0"
               step="0.01"
@@ -120,13 +120,13 @@ export default async function NewProjectPage() {
               required
               className="w-full rounded border border-gray-300 px-3 py-2"
             >
-              <option value="catchup">Initial Catch-up</option>
-              <option value="quote">Quote Sent</option>
+              <option value="catchup">Meeting</option>
+              <option value="quote">Quote</option>
               <option value="followup">Follow-up</option>
-              <option value="started">Project Started</option>
-              <option value="install">Install</option>
-              <option value="invoiced">Invoiced</option>
-              <option value="completed">Completed</option>
+              <option value="started">Project Confirmed</option>
+              <option value="install">Install Planned</option>
+              <option value="invoiced">To Invoice</option>
+              <option value="completed">Project Archived</option>
             </select>
           </div>
 
