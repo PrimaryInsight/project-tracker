@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createProjectRecord } from "@/app/actions";
 import ClientSearchSelect from "./ClientSearchSelect";
+import SubmitButton from "./SubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -130,13 +131,7 @@ export default async function NewProjectPage() {
           </div>
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={!clients.length}
-              className="rounded bg-green-600 px-5 py-2 font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-            >
-              Save Project
-            </button>
+            <SubmitButton />
 
             <Link
               href="/"

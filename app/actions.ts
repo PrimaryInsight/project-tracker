@@ -27,19 +27,18 @@ export async function createClientRecord(formData: FormData) {
   const { supabase } = await getAuthenticatedSupabase();
   const companyName = String(formData.get("company_name") || "").trim();
   const contactName = String(formData.get("contact_name") || "").trim();
-  const phone = String(formData.get("phone") || "").trim();
   const mobile = String(formData.get("mobile") || "").trim();
   const email = String(formData.get("email") || "").trim();
 
-  if (!companyName || !contactName || !phone || !email) {
+  if (!companyName || !contactName || !mobile || !email) {
     throw new Error("Company name, contact name, phone and email are required.");
   }
 
   const { error } = await supabase.from("clients").insert({
     company_name: companyName,
     contact_name: contactName,
-    phone,
-    mobile: mobile || null,
+    phone:null,
+    mobile,
     email,
   });
 

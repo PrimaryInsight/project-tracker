@@ -90,7 +90,7 @@ export default async function ProjectDetailsPage({
                 </div>
                 <div>
                   <span className="font-medium">Phone:</span>{" "}
-                  {project.mobile || project.phone || "Not set"}
+                  {project.mobile || "Not set"}
                 </div>
                 <div>
                   <span className="font-medium">Email:</span>{" "}

@@ -45,16 +45,6 @@ export default function NewClientPage() {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Phone</label>
-            <input
-              type="text"
-              name="phone"
-              required
-              className="w-full rounded border px-3 py-2"
-            />
-          </div>
-
-          <div>
             <label className="block mb-1 font-medium">Mobile</label>
             <input
               type="text"
