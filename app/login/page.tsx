@@ -27,11 +27,11 @@ function LoginForm() {
         password,
       });
 
-    if (signInError) {
-      setError("Invalid email or password.");
-      setIsSubmitting(false);
-      return;
-    }
+   if (signInError) {
+  setError(signInError.message);
+  setIsSubmitting(false);
+  return;
+}
 
     const destination = searchParams.get("next") || "/";
 
