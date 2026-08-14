@@ -1,25 +1,41 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 export default async function Home() {
-  const { data, error } = await supabase
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const { data: projects } = await supabase
     .from("projects")
     .select("*");
 
   return (
     <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">
+      <h1 className="text-3xl font-bold mb-8">
         Project Tracker
       </h1>
 
-      {error && (
-        <pre className="text-red-600">
-          {JSON.stringify(error, null, 2)}
-        </pre>
-     )}
+      <div className="border rounded-lg p-4 bg-white">
+        <h2 className="font-semibold mb-4">
+          Initial Catch-up
+        </h2>
 
-      <pre>
-        {JSON.stringify(data, null, 2)}
-      </pre>
+        {projects?.map((project) => (
+          <div
+            key={project.id}
+            className="border rounded p-3 mb-2"
+          >
+            <div className="font-medium">
+              {project.project_name}
+            </div>
+
+            <div className="text-sm text-gray-500">
+              {project.current_stage}
+            </div>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
