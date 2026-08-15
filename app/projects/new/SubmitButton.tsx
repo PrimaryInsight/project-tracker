@@ -9,7 +9,7 @@ export default function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded bg-green-600 px-5 py-2 font-medium text-white hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+      className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
     >
       {pending ? "Saving..." : "Save Project"}
     </button>

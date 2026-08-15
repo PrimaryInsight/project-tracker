@@ -48,7 +48,7 @@ export default async function ArchivePage() {
 
           <Link
             href="/"
-            className="rounded bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded bg-slate-600 px-4 py-2 text-white hover:bg-slate-700"
           >
             Back to Board
           </Link>

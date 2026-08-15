@@ -39,7 +39,7 @@ export default async function Home() {
       <div className="mb-6 flex flex-wrap gap-4">
         <Link
           href="/clients/new"
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="rounded bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
         >
           + New Client
         </Link>

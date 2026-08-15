@@ -65,7 +65,7 @@ export default async function ProjectDetailsPage({
 
           <Link
             href="/"
-            className="rounded border border-slate-300 bg-white px-4 py-2 hover:bg-slate-100"
+            className="rounded bg-slate-600 px-4 py-2 text-white hover:bg-slate-700"
           >
             Back to Board
           </Link>
@@ -253,7 +253,7 @@ export default async function ProjectDetailsPage({
               />
               <button
                 type="submit"
-                className="rounded bg-emerald-700 px-5 py-2 font-medium text-white hover:bg-emerald-800"
+                className="rounded bg-slate-700 px-5 py-2 font-medium text-white hover:bg-slate-800"
               >
                 Add Note
               </button>
