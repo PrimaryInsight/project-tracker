@@ -310,7 +310,7 @@ export async function restoreProject(formData: FormData) {
   const { error: restoreError } = await supabase
     .from("projects")
     .update({
-      current_stage: "followup",
+      current_stage: "catchup",
       archived_date: null,
       updated_at: new Date().toISOString(),
     })
