@@ -1,13 +1,26 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import ArchiveClient, { ArchivedProject } from "./ArchiveClient";
+
+export const dynamic = "force-dynamic";
 
 export default async function ArchivePage() {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
   const { data: projects, error } = await supabase
     .from("projects")
     .select(`
-      *,
+      id,
+      project_name,
+      project_manager,
+      archived_date,
       clients (
         company_name,
         contact_name
@@ -21,12 +34,17 @@ export default async function ArchivePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-8">
+    <main className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">
-            Archived Projects
-          </h1>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              Archived Projects
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Search, review or restore archived projects.
+            </p>
+          </div>
 
           <Link
             href="/"
@@ -36,50 +54,7 @@ export default async function ArchivePage() {
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-lg border bg-white">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-slate-100">
-                <th className="p-3 text-left">Client</th>
-                <th className="p-3 text-left">Project</th>
-                <th className="p-3 text-left">Manager</th>
-                <th className="p-3 text-left">Archived</th>
-                <th className="p-3"></th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {projects?.map((project) => (
-                <tr key={project.id} className="border-b">
-                  <td className="p-3">
-                    {project.clients?.company_name}
-                  </td>
-
-                  <td className="p-3">
-                    {project.project_name}
-                  </td>
-
-                  <td className="p-3">
-                    {project.project_manager}
-                  </td>
-
-                  <td className="p-3">
-                    {project.archived_date || "-"}
-                  </td>
-
-                  <td className="p-3">
-                    <Link
-                      href={`/projects/edit/${project.id}`}
-                      className="rounded bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
-                    >
-                      Details
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ArchiveClient projects={(projects ?? []) as ArchivedProject[]} />
       </div>
     </main>
   );

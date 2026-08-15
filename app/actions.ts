@@ -288,3 +288,57 @@ export async function addProjectNote(formData: FormData) {
   revalidatePath(`/projects/edit/${projectId}`);
   redirect(`/projects/edit/${projectId}`);
 }
+export async function restoreProject(formData: FormData) {
+  const { supabase } = await getAuthenticatedSupabase();
+
+  const projectId = String(formData.get("project_id") || "").trim();
+
+  if (!projectId) {
+    throw new Error("Project ID is required.");
+  }
+
+  const { data: existing, error: readError } = await supabase
+    .from("projects")
+    .select("current_stage")
+    .eq("id", projectId)
+    .single();
+
+  if (readError || !existing) {
+    throw new Error(readError?.message || "Project could not be found.");
+  }
+
+  const { error: restoreError } = await supabase
+    .from("projects")
+    .update({
+      current_stage: "followup",
+      archived_date: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", projectId);
+
+  if (restoreError) {
+    throw new Error(restoreError.message);
+  }
+
+  if (existing.current_stage !== "followup") {
+    const { error: historyError } = await supabase
+      .from("stage_history")
+      .insert({
+        project_id: projectId,
+        from_stage: existing.current_stage,
+        to_stage: "followup",
+      });
+
+    if (historyError) {
+      console.error(
+        "Restore stage history was not saved:",
+        historyError.message
+      );
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/archive");
+  revalidatePath(`/projects/edit/${projectId}`);
+  redirect("/archive");
+}
