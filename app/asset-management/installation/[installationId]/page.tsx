@@ -1,4 +1,7 @@
-import { createElement as h } from "react";
+import {
+  createElement as h,
+  type ReactNode,
+} from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 import { createHardwareClient } from "@/lib/hardware-supabase";
@@ -88,7 +91,6 @@ type InstallationEventRecord = {
   to_warehouse: string | null;
   reason: string | null;
   notes: string | null;
-  created_by: string;
   created_at: string;
   source: string;
 };
@@ -141,8 +143,15 @@ function formatDateTime(
 
 function detailField(
   label: string,
-  value: string | number | null | undefined
+  content: ReactNode
 ) {
+  const displayedContent =
+    content === null ||
+    content === undefined ||
+    content === ""
+      ? "Not recorded"
+      : content;
+
   return h(
     "div",
     {
@@ -158,12 +167,12 @@ function detailField(
       label
     ),
     h(
-      "p",
+      "div",
       {
         className:
           "mt-0.5 break-words text-sm font-medium leading-5 text-slate-900",
       },
-      displayValue(value)
+      displayedContent
     )
   );
 }
@@ -182,6 +191,100 @@ function navigationButton(
         : "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50",
     },
     text
+  );
+}
+
+function clientLink(
+  client: ClientRecord | null
+) {
+  if (!client) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/client/${encodeURIComponent(
+        client.client_id
+      )}`,
+      className:
+        "font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-950",
+    },
+    client.client_name
+  );
+}
+
+function locationLink(
+  location: LocationRecord | null
+) {
+  if (!location) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/location/${encodeURIComponent(
+        location.location_id
+      )}`,
+      className:
+        "font-semibold text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-950",
+    },
+    location.location_name
+  );
+}
+
+function stockLink(stockItemId: string) {
+  return h(
+    "a",
+    {
+      href: `/asset-management/stock/${encodeURIComponent(
+        stockItemId
+      )}`,
+      className:
+        "font-semibold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
+    },
+    stockItemId
+  );
+}
+
+function sectionHeader(
+  title: string,
+  count: number
+) {
+  return h(
+    "div",
+    {
+      className:
+        "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
+    },
+    h(
+      "h2",
+      {
+        className: "text-lg font-semibold",
+      },
+      title
+    ),
+    h(
+      "span",
+      {
+        className:
+          "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
+      },
+      count.toLocaleString()
+    )
   );
 }
 
@@ -368,7 +471,7 @@ export default async function InstallationDetailPage({
     hardware
       .from("asset_events")
       .select(
-        "asset_event_id, stock_item_id, event_type, event_date, previous_lifecycle_status, new_lifecycle_status, from_installation_id, to_installation_id, from_warehouse, to_warehouse, reason, notes, created_by, created_at, source"
+        "asset_event_id, stock_item_id, event_type, event_date, previous_lifecycle_status, new_lifecycle_status, from_installation_id, to_installation_id, from_warehouse, to_warehouse, reason, notes, created_at, source"
       )
       .or(
         `from_installation_id.eq.${installationId},to_installation_id.eq.${installationId}`
@@ -398,25 +501,25 @@ export default async function InstallationDetailPage({
 
   if (clientResponse.error) {
     loadErrors.push(
-      `Client details: ${clientResponse.error.message}`
+      `Client: ${clientResponse.error.message}`
     );
   }
 
   if (locationResponse.error) {
     loadErrors.push(
-      `Location details: ${locationResponse.error.message}`
+      `Location: ${locationResponse.error.message}`
     );
   }
 
   if (assetsResponse.error) {
     loadErrors.push(
-      `Installation assets: ${assetsResponse.error.message}`
+      `Assigned assets: ${assetsResponse.error.message}`
     );
   }
 
   if (eventsResponse.error) {
     loadErrors.push(
-      `Installation events: ${eventsResponse.error.message}`
+      `Event history: ${eventsResponse.error.message}`
     );
   }
 
@@ -444,17 +547,7 @@ export default async function InstallationDetailPage({
         h(
           "div",
           null,
-          h(
-            "a",
-            {
-              href: `/asset-management/stock/${encodeURIComponent(
-                asset.stock_item_id
-              )}`,
-              className:
-                "text-base font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
-            },
-            asset.stock_item_id
-          ),
+          stockLink(asset.stock_item_id),
           h(
             "p",
             {
@@ -481,31 +574,31 @@ export default async function InstallationDetailPage({
         },
         detailField(
           "Product code",
-          asset.product_code
+          displayValue(asset.product_code)
         ),
         detailField(
-          "Product serial",
-          asset.product_serial
+          "Serial",
+          displayValue(asset.product_serial)
         ),
         detailField(
-          "Product category",
-          asset.product_category
+          "Category",
+          displayValue(asset.product_category)
         ),
         detailField(
           "Asset role",
-          asset.asset_role
+          displayValue(asset.asset_role)
         ),
         detailField(
           "Arrangement",
-          asset.asset_arrangement
+          displayValue(asset.asset_arrangement)
         ),
         detailField(
-          "Installed at",
+          "Installed",
           formatDate(asset.installed_at)
         ),
         detailField(
           "Stock status",
-          asset.stock_record_status
+          displayValue(asset.stock_record_status)
         ),
         detailField(
           "Assignment ID",
@@ -565,34 +658,36 @@ export default async function InstallationDetailPage({
         },
         detailField(
           "Stock item",
-          event.stock_item_id
+          stockLink(event.stock_item_id)
         ),
         detailField(
           "Previous lifecycle",
-          event.previous_lifecycle_status
+          displayValue(
+            event.previous_lifecycle_status
+          )
         ),
         detailField(
           "New lifecycle",
-          event.new_lifecycle_status
+          displayValue(event.new_lifecycle_status)
         ),
         detailField(
           "From installation",
-          event.from_installation_id
+          displayValue(event.from_installation_id)
         ),
         detailField(
           "To installation",
-          event.to_installation_id
+          displayValue(event.to_installation_id)
         ),
         detailField(
           "From warehouse",
-          event.from_warehouse
+          displayValue(event.from_warehouse)
         ),
         detailField(
           "To warehouse",
-          event.to_warehouse
+          displayValue(event.to_warehouse)
         ),
         detailField(
-          "Recorded at",
+          "Recorded",
           formatDateTime(event.created_at)
         )
       ),
@@ -606,14 +701,18 @@ export default async function InstallationDetailPage({
             h(
               "p",
               null,
-              `Reason: ${displayValue(event.reason)}`
+              `Reason: ${displayValue(
+                event.reason
+              )}`
             ),
             h(
               "p",
               {
                 className: "mt-0.5",
               },
-              `Notes: ${displayValue(event.notes)}`
+              `Notes: ${displayValue(
+                event.notes
+              )}`
             )
           )
         : null
@@ -631,6 +730,7 @@ export default async function InstallationDetailPage({
       {
         className: "mx-auto max-w-7xl",
       },
+
       h(
         "header",
         {
@@ -662,11 +762,15 @@ export default async function InstallationDetailPage({
               className:
                 "mt-1 text-base text-slate-700",
             },
-            `${displayValue(
-              client?.client_name
-            )} / ${displayValue(
-              location?.location_name
-            )}`
+            clientLink(client),
+            h(
+              "span",
+              {
+                className: "text-slate-500",
+              },
+              " / "
+            ),
+            locationLink(location)
           ),
           h(
             "p",
@@ -758,11 +862,15 @@ export default async function InstallationDetailPage({
                 className:
                   "mt-0.5 text-sm text-slate-600",
               },
-              `${displayValue(
-                client?.client_name
-              )} / ${displayValue(
-                location?.location_name
-              )}`
+              clientLink(client),
+              h(
+                "span",
+                {
+                  className: "text-slate-500",
+                },
+                " / "
+              ),
+              locationLink(location)
             )
           ),
           h(
@@ -774,6 +882,7 @@ export default async function InstallationDetailPage({
             installation.status
           )
         ),
+
         h(
           "div",
           {
@@ -792,7 +901,9 @@ export default async function InstallationDetailPage({
           ),
           detailField(
             "Type",
-            installation.installation_type
+            displayValue(
+              installation.installation_type
+            )
           ),
           detailField(
             "Status",
@@ -804,7 +915,7 @@ export default async function InstallationDetailPage({
           ),
           detailField(
             "Client",
-            client?.client_name
+            clientLink(client)
           ),
           detailField(
             "Location ID",
@@ -812,31 +923,35 @@ export default async function InstallationDetailPage({
           ),
           detailField(
             "Location",
-            location?.location_name
+            locationLink(location)
           ),
           detailField(
             "Crop",
-            installation.crop
+            displayValue(installation.crop)
           ),
           detailField(
             "Logger ID",
-            installation.logger_id
+            displayValue(installation.logger_id)
           ),
           detailField(
             "Logger type",
-            installation.logger_type
+            displayValue(
+              installation.logger_type
+            )
           ),
           detailField(
             "FTP ID",
-            installation.ftp_id
+            displayValue(installation.ftp_id)
           ),
           detailField(
             "SIM card",
-            installation.sim_card
+            displayValue(installation.sim_card)
           ),
           detailField(
             "Other sensors",
-            installation.other_sensors
+            displayValue(
+              installation.other_sensors
+            )
           ),
           detailField(
             "Closed",
@@ -849,6 +964,7 @@ export default async function InstallationDetailPage({
             )
           )
         ),
+
         installation.notes
           ? h(
               "div",
@@ -882,6 +998,7 @@ export default async function InstallationDetailPage({
           className:
             "mt-4 grid gap-4 lg:grid-cols-2",
         },
+
         h(
           "article",
           {
@@ -904,30 +1021,31 @@ export default async function InstallationDetailPage({
             },
             detailField(
               "Client name",
-              client?.client_name
+              clientLink(client)
             ),
             detailField(
               "Status",
-              client?.status
+              displayValue(client?.status)
             ),
             detailField(
               "Contact",
-              client?.contact_name
+              displayValue(client?.contact_name)
             ),
             detailField(
               "Phone",
-              client?.phone
+              displayValue(client?.phone)
             ),
             detailField(
               "Email",
-              client?.email
+              displayValue(client?.email)
             ),
             detailField(
               "Address",
-              client?.address
+              displayValue(client?.address)
             )
           )
         ),
+
         h(
           "article",
           {
@@ -950,15 +1068,17 @@ export default async function InstallationDetailPage({
             },
             detailField(
               "Location name",
-              location?.location_name
+              locationLink(location)
             ),
             detailField(
               "Type",
-              location?.location_type
+              displayValue(
+                location?.location_type
+              )
             ),
             detailField(
               "Region",
-              location?.region
+              displayValue(location?.region)
             ),
             detailField(
               "Coordinates",
@@ -966,11 +1086,13 @@ export default async function InstallationDetailPage({
             ),
             detailField(
               "Status",
-              location?.status
+              displayValue(location?.status)
             ),
             detailField(
               "Verification",
-              location?.verification_status
+              displayValue(
+                location?.verification_status
+              )
             )
           )
         )
@@ -982,28 +1104,9 @@ export default async function InstallationDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Assigned Assets"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            assets.length.toLocaleString()
-          )
+        sectionHeader(
+          "Assigned Assets",
+          assets.length
         ),
         assets.length === 0
           ? h(
@@ -1044,28 +1147,9 @@ export default async function InstallationDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Installation Event History"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            events.length.toLocaleString()
-          )
+        sectionHeader(
+          "Installation Event History",
+          events.length
         ),
         events.length === 0
           ? h(
