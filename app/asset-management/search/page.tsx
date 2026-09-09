@@ -77,6 +77,100 @@ function displayValue(
   return String(value);
 }
 
+function clientLink(
+  clientId: string | null,
+  clientName: string | null
+) {
+  if (!clientId || !clientName) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/client/${encodeURIComponent(
+        clientId
+      )}`,
+      className:
+        "font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-950",
+    },
+    clientName
+  );
+}
+
+function locationLink(
+  locationId: string | null,
+  locationName: string | null
+) {
+  if (!locationId || !locationName) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/location/${encodeURIComponent(
+        locationId
+      )}`,
+      className:
+        "font-semibold text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-950",
+    },
+    locationName
+  );
+}
+
+function installationLink(
+  installationId: string | null
+) {
+  if (!installationId) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/installation/${encodeURIComponent(
+        installationId
+      )}`,
+      className:
+        "font-semibold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
+    },
+    installationId
+  );
+}
+
+function stockLink(stockItemId: string) {
+  return h(
+    "a",
+    {
+      href: `/asset-management/stock/${encodeURIComponent(
+        stockItemId
+      )}`,
+      className:
+        "font-semibold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
+    },
+    stockItemId
+  );
+}
+
 function resultSection(
   title: string,
   count: number,
@@ -125,32 +219,6 @@ function resultSection(
           },
           ...children
         )
-  );
-}
-
-function installationLink(
-  installationId: string | null
-) {
-  if (!installationId) {
-    return h(
-      "span",
-      {
-        className: "text-slate-500",
-      },
-      "Not recorded"
-    );
-  }
-
-  return h(
-    "a",
-    {
-      href: `/asset-management/installation/${encodeURIComponent(
-        installationId
-      )}`,
-      className:
-        "font-semibold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
-    },
-    installationId
   );
 }
 
@@ -363,17 +431,7 @@ export default async function SearchPage({
         h(
           "div",
           null,
-          h(
-            "a",
-            {
-              href: `/asset-management/stock/${encodeURIComponent(
-                asset.stock_item_id
-              )}`,
-              className:
-                "text-base font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
-            },
-            asset.stock_item_id
-          ),
+          stockLink(asset.stock_item_id),
           h(
             "p",
             {
@@ -432,16 +490,20 @@ export default async function SearchPage({
         h(
           "p",
           null,
-          `Client: ${displayValue(
+          "Client: ",
+          clientLink(
+            asset.client_id,
             asset.client_name
-          )}`
+          )
         ),
         h(
           "p",
           null,
-          `Location: ${displayValue(
+          "Location: ",
+          locationLink(
+            asset.location_id,
             asset.location_name
-          )}`
+          )
         ),
         h(
           "p",
@@ -471,11 +533,11 @@ export default async function SearchPage({
           null,
           h(
             "h3",
-            {
-              className:
-                "text-base font-bold text-slate-900",
-            },
-            client.client_name
+            null,
+            clientLink(
+              client.client_id,
+              client.client_name
+            )
           ),
           h(
             "p",
@@ -541,11 +603,11 @@ export default async function SearchPage({
             null,
             h(
               "h3",
-              {
-                className:
-                  "text-base font-bold text-slate-900",
-              },
-              location.location_name
+              null,
+              locationLink(
+                location.location_id,
+                location.location_name
+              )
             ),
             h(
               "p",
@@ -620,15 +682,7 @@ export default async function SearchPage({
           h(
             "div",
             null,
-            h(
-              "a",
-              {
-                href: `/asset-management/installation/${encodeURIComponent(
-                  installation.installation_id
-                )}`,
-                className:
-                  "text-base font-bold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
-              },
+            installationLink(
               installation.installation_id
             ),
             h(
