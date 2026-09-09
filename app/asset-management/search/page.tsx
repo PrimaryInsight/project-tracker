@@ -211,6 +211,7 @@ export default async function SearchPage({
   let locations: LocationResult[] = [];
   let installations: InstallationResult[] = [];
   let assets: AssetResult[] = [];
+
   const errors: string[] = [];
 
   if (safeSearchText.length >= 2) {
@@ -277,8 +278,9 @@ export default async function SearchPage({
       );
     } else {
       clients =
-        (clientResponse.data as ClientResult[] | null) ??
-        [];
+        (clientResponse.data as
+          | ClientResult[]
+          | null) ?? [];
     }
 
     if (locationResponse.error) {
@@ -287,8 +289,9 @@ export default async function SearchPage({
       );
     } else {
       locations =
-        (locationResponse.data as LocationResult[] | null) ??
-        [];
+        (locationResponse.data as
+          | LocationResult[]
+          | null) ?? [];
     }
 
     if (installationResponse.error) {
@@ -308,8 +311,9 @@ export default async function SearchPage({
       );
     } else {
       assets =
-        (assetResponse.data as AssetResult[] | null) ??
-        [];
+        (assetResponse.data as
+          | AssetResult[]
+          | null) ?? [];
     }
   }
 
@@ -565,11 +569,18 @@ export default async function SearchPage({
           null,
           h(
             "h3",
-            {
-              className:
-                "text-lg font-bold text-slate-900",
-            },
-            asset.stock_item_id
+            null,
+            h(
+              "a",
+              {
+                href: `/asset-management/stock/${encodeURIComponent(
+                  asset.stock_item_id
+                )}`,
+                className:
+                  "text-lg font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
+              },
+              asset.stock_item_id
+            )
           ),
           h(
             "p",
