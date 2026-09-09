@@ -159,6 +159,23 @@ function navigationButton(
   );
 }
 
+function locationLink(
+  locationId: string,
+  locationName: string
+) {
+  return h(
+    "a",
+    {
+      href: `/asset-management/location/${encodeURIComponent(
+        locationId
+      )}`,
+      className:
+        "font-semibold text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-950",
+    },
+    locationName
+  );
+}
+
 function installationLink(
   installationId: string
 ) {
@@ -186,6 +203,34 @@ function stockLink(stockItemId: string) {
         "font-semibold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
     },
     stockItemId
+  );
+}
+
+function sectionHeader(
+  title: string,
+  count: number
+) {
+  return h(
+    "div",
+    {
+      className:
+        "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
+    },
+    h(
+      "h2",
+      {
+        className: "text-lg font-semibold",
+      },
+      title
+    ),
+    h(
+      "span",
+      {
+        className:
+          "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
+      },
+      count.toLocaleString()
+    )
   );
 }
 
@@ -254,17 +299,6 @@ export default async function ClientDetailPage({
               "mt-2 text-sm text-slate-700",
           },
           "The signed-in email is not in the approved Hardware Database staff list."
-        ),
-        h(
-          "div",
-          {
-            className: "mt-4",
-          },
-          navigationButton(
-            "/asset-management",
-            "Return to Asset Management",
-            true
-          )
         )
       )
     );
@@ -449,11 +483,11 @@ export default async function ClientDetailPage({
             null,
             h(
               "h3",
-              {
-                className:
-                  "text-base font-bold text-slate-900",
-              },
-              location.location_name
+              null,
+              locationLink(
+                location.location_id,
+                location.location_name
+              )
             ),
             h(
               "p",
@@ -519,8 +553,15 @@ export default async function ClientDetailPage({
   );
 
   const installationCards =
-    installations.map((installation) =>
-      h(
+    installations.map((installation) => {
+      const matchingLocation =
+        locations.find(
+          (location) =>
+            location.location_id ===
+            installation.location_id
+        );
+
+      return h(
         "article",
         {
           key: installation.installation_id,
@@ -544,7 +585,12 @@ export default async function ClientDetailPage({
                 className:
                   "mt-0.5 text-xs text-slate-500",
               },
-              `Location ${installation.location_id}`
+              matchingLocation
+                ? locationLink(
+                    matchingLocation.location_id,
+                    matchingLocation.location_name
+                  )
+                : `Location ${installation.location_id}`
             )
           ),
           h(
@@ -593,8 +639,8 @@ export default async function ClientDetailPage({
             formatDate(installation.closed_at)
           )
         )
-      )
-    );
+      );
+    });
 
   const assetCards = assets.map((asset) =>
     h(
@@ -651,9 +697,34 @@ export default async function ClientDetailPage({
           "Classification",
           asset.asset_classification
         ),
-        detailField(
-          "Location",
-          asset.location_name
+        h(
+          "div",
+          {
+            className:
+              "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
+          },
+          h(
+            "p",
+            {
+              className:
+                "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
+            },
+            "Location"
+          ),
+          h(
+            "p",
+            {
+              className:
+                "mt-0.5 text-sm leading-5",
+            },
+            asset.location_id &&
+              asset.location_name
+              ? locationLink(
+                  asset.location_id,
+                  asset.location_name
+                )
+              : "Not recorded"
+          )
         ),
         h(
           "div",
@@ -925,28 +996,9 @@ export default async function ClientDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Locations"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            locations.length.toLocaleString()
-          )
+        sectionHeader(
+          "Locations",
+          locations.length
         ),
         locations.length === 0
           ? h(
@@ -973,28 +1025,9 @@ export default async function ClientDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Installations"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            installations.length.toLocaleString()
-          )
+        sectionHeader(
+          "Installations",
+          installations.length
         ),
         installations.length === 0
           ? h(
@@ -1021,28 +1054,9 @@ export default async function ClientDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Currently Assigned Assets"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            assets.length.toLocaleString()
-          )
+        sectionHeader(
+          "Currently Assigned Assets",
+          assets.length
         ),
         assets.length === 0
           ? h(
