@@ -86,18 +86,18 @@ function resultSection(
     "section",
     {
       className:
-        "mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
+        "mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
     },
     h(
       "div",
       {
         className:
-          "flex items-center justify-between gap-4 bg-slate-800 px-5 py-4 text-white",
+          "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
       },
       h(
         "h2",
         {
-          className: "text-xl font-semibold",
+          className: "text-lg font-semibold",
         },
         title
       ),
@@ -105,7 +105,7 @@ function resultSection(
         "span",
         {
           className:
-            "rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-800",
+            "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
         },
         count.toLocaleString()
       )
@@ -114,7 +114,7 @@ function resultSection(
       ? h(
           "p",
           {
-            className: "p-5 text-slate-600",
+            className: "p-4 text-sm text-slate-600",
           },
           "No matching records found."
         )
@@ -125,6 +125,32 @@ function resultSection(
           },
           ...children
         )
+  );
+}
+
+function installationLink(
+  installationId: string | null
+) {
+  if (!installationId) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/installation/${encodeURIComponent(
+        installationId
+      )}`,
+      className:
+        "font-semibold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
+    },
+    installationId
   );
 }
 
@@ -162,26 +188,27 @@ export default async function SearchPage({
       "main",
       {
         className:
-          "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+          "min-h-screen bg-slate-100 px-4 py-6",
       },
       h(
         "section",
         {
           className:
-            "mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-8 shadow-sm",
+            "mx-auto max-w-3xl rounded-lg border border-red-200 bg-white p-5 shadow-sm",
         },
         h(
           "h1",
           {
             className:
-              "text-2xl font-bold text-red-800",
+              "text-xl font-bold text-red-800",
           },
           "Hardware Database access denied"
         ),
         h(
           "p",
           {
-            className: "mt-3 text-slate-700",
+            className:
+              "mt-2 text-sm text-slate-700",
           },
           "The signed-in email is not in the approved Hardware Database staff list."
         ),
@@ -190,7 +217,7 @@ export default async function SearchPage({
           {
             href: "/asset-management",
             className:
-              "mt-6 inline-flex rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white",
+              "mt-4 inline-flex rounded-md bg-slate-700 px-3 py-2 text-sm font-semibold text-white",
           },
           "Return to Asset Management"
         )
@@ -317,237 +344,6 @@ export default async function SearchPage({
     }
   }
 
-  const clientCards = clients.map((client) =>
-    h(
-      "article",
-      {
-        key: client.client_id,
-        className: "p-5",
-      },
-      h(
-        "div",
-        {
-          className:
-            "flex flex-wrap items-start justify-between gap-4",
-        },
-        h(
-          "div",
-          null,
-          h(
-            "h3",
-            {
-              className:
-                "text-lg font-bold text-slate-900",
-            },
-            client.client_name
-          ),
-          h(
-            "p",
-            {
-              className:
-                "mt-1 text-sm text-slate-500",
-            },
-            `Client ID: ${client.client_id}`
-          )
-        ),
-        h(
-          "span",
-          {
-            className:
-              "rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800",
-          },
-          client.status
-        )
-      ),
-      h(
-        "div",
-        {
-          className:
-            "mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-3",
-        },
-        h(
-          "p",
-          null,
-          `Contact: ${displayValue(
-            client.contact_name
-          )}`
-        ),
-        h(
-          "p",
-          null,
-          `Phone: ${displayValue(client.phone)}`
-        ),
-        h(
-          "p",
-          null,
-          `Email: ${displayValue(client.email)}`
-        )
-      )
-    )
-  );
-
-  const locationCards = locations.map(
-    (location) =>
-      h(
-        "article",
-        {
-          key: location.location_id,
-          className: "p-5",
-        },
-        h(
-          "div",
-          {
-            className:
-              "flex flex-wrap items-start justify-between gap-4",
-          },
-          h(
-            "div",
-            null,
-            h(
-              "h3",
-              {
-                className:
-                  "text-lg font-bold text-slate-900",
-              },
-              location.location_name
-            ),
-            h(
-              "p",
-              {
-                className:
-                  "mt-1 text-sm text-slate-500",
-              },
-              `Location ID: ${location.location_id}`
-            )
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800",
-            },
-            location.status
-          )
-        ),
-        h(
-          "div",
-          {
-            className:
-              "mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4",
-          },
-          h(
-            "p",
-            null,
-            `Client ID: ${location.client_id}`
-          ),
-          h(
-            "p",
-            null,
-            `Type: ${displayValue(
-              location.location_type
-            )}`
-          ),
-          h(
-            "p",
-            null,
-            `Region: ${displayValue(
-              location.region
-            )}`
-          ),
-          h(
-            "p",
-            null,
-            `Coordinates: ${displayValue(
-              location.latitude
-            )}, ${displayValue(
-              location.longitude
-            )}`
-          )
-        )
-      )
-  );
-
-  const installationCards = installations.map(
-    (installation) =>
-      h(
-        "article",
-        {
-          key: installation.installation_id,
-          className: "p-5",
-        },
-        h(
-          "div",
-          {
-            className:
-              "flex flex-wrap items-start justify-between gap-4",
-          },
-          h(
-            "div",
-            null,
-            h(
-              "h3",
-              {
-                className:
-                  "text-lg font-bold text-slate-900",
-              },
-              installation.installation_id
-            ),
-            h(
-              "p",
-              {
-                className:
-                  "mt-1 text-sm text-slate-500",
-              },
-              `Client ${installation.client_id} | Location ${installation.location_id}`
-            )
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-violet-100 px-3 py-1 text-sm font-semibold text-violet-800",
-            },
-            installation.status
-          )
-        ),
-        h(
-          "div",
-          {
-            className:
-              "mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4",
-          },
-          h(
-            "p",
-            null,
-            `Date: ${displayValue(
-              installation.installation_date
-            )}`
-          ),
-          h(
-            "p",
-            null,
-            `Type: ${displayValue(
-              installation.installation_type
-            )}`
-          ),
-          h(
-            "p",
-            null,
-            `Logger: ${displayValue(
-              installation.logger_id
-            )}`
-          ),
-          h(
-            "p",
-            null,
-            `FTP ID: ${displayValue(
-              installation.ftp_id
-            )}`
-          )
-        )
-      )
-  );
-
   const assetCards = assets.map((asset) =>
     h(
       "article",
@@ -556,37 +352,33 @@ export default async function SearchPage({
           asset.installation_id === null
             ? asset.stock_item_id
             : `${asset.stock_item_id}-${asset.installation_id}`,
-        className: "p-5",
+        className: "px-4 py-3",
       },
       h(
         "div",
         {
           className:
-            "flex flex-wrap items-start justify-between gap-4",
+            "flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
           null,
           h(
-            "h3",
-            null,
-            h(
-              "a",
-              {
-                href: `/asset-management/stock/${encodeURIComponent(
-                  asset.stock_item_id
-                )}`,
-                className:
-                  "text-lg font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
-              },
-              asset.stock_item_id
-            )
+            "a",
+            {
+              href: `/asset-management/stock/${encodeURIComponent(
+                asset.stock_item_id
+              )}`,
+              className:
+                "text-base font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
+            },
+            asset.stock_item_id
           ),
           h(
             "p",
             {
               className:
-                "mt-1 text-sm text-slate-500",
+                "mt-0.5 text-sm text-slate-600",
             },
             asset.product_description
           )
@@ -595,7 +387,7 @@ export default async function SearchPage({
           "span",
           {
             className:
-              "rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900",
+              "rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900",
           },
           asset.current_position
         )
@@ -604,7 +396,7 @@ export default async function SearchPage({
         "div",
         {
           className:
-            "mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4",
+            "mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4",
         },
         h(
           "p",
@@ -654,30 +446,263 @@ export default async function SearchPage({
         h(
           "p",
           null,
-          `Installation: ${displayValue(
-            asset.installation_id
-          )}`
+          "Installation: ",
+          installationLink(asset.installation_id)
         )
       )
     )
+  );
+
+  const clientCards = clients.map((client) =>
+    h(
+      "article",
+      {
+        key: client.client_id,
+        className: "px-4 py-3",
+      },
+      h(
+        "div",
+        {
+          className:
+            "flex flex-wrap items-start justify-between gap-3",
+        },
+        h(
+          "div",
+          null,
+          h(
+            "h3",
+            {
+              className:
+                "text-base font-bold text-slate-900",
+            },
+            client.client_name
+          ),
+          h(
+            "p",
+            {
+              className:
+                "mt-0.5 text-xs text-slate-500",
+            },
+            `Client ID: ${client.client_id}`
+          )
+        ),
+        h(
+          "span",
+          {
+            className:
+              "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800",
+          },
+          client.status
+        )
+      ),
+      h(
+        "div",
+        {
+          className:
+            "mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-3",
+        },
+        h(
+          "p",
+          null,
+          `Contact: ${displayValue(
+            client.contact_name
+          )}`
+        ),
+        h(
+          "p",
+          null,
+          `Phone: ${displayValue(client.phone)}`
+        ),
+        h(
+          "p",
+          null,
+          `Email: ${displayValue(client.email)}`
+        )
+      )
+    )
+  );
+
+  const locationCards = locations.map(
+    (location) =>
+      h(
+        "article",
+        {
+          key: location.location_id,
+          className: "px-4 py-3",
+        },
+        h(
+          "div",
+          {
+            className:
+              "flex flex-wrap items-start justify-between gap-3",
+          },
+          h(
+            "div",
+            null,
+            h(
+              "h3",
+              {
+                className:
+                  "text-base font-bold text-slate-900",
+              },
+              location.location_name
+            ),
+            h(
+              "p",
+              {
+                className:
+                  "mt-0.5 text-xs text-slate-500",
+              },
+              `Location ID: ${location.location_id}`
+            )
+          ),
+          h(
+            "span",
+            {
+              className:
+                "rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800",
+            },
+            location.status
+          )
+        ),
+        h(
+          "div",
+          {
+            className:
+              "mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4",
+          },
+          h(
+            "p",
+            null,
+            `Client ID: ${location.client_id}`
+          ),
+          h(
+            "p",
+            null,
+            `Type: ${displayValue(
+              location.location_type
+            )}`
+          ),
+          h(
+            "p",
+            null,
+            `Region: ${displayValue(
+              location.region
+            )}`
+          ),
+          h(
+            "p",
+            null,
+            `Coordinates: ${displayValue(
+              location.latitude
+            )}, ${displayValue(
+              location.longitude
+            )}`
+          )
+        )
+      )
+  );
+
+  const installationCards = installations.map(
+    (installation) =>
+      h(
+        "article",
+        {
+          key: installation.installation_id,
+          className: "px-4 py-3",
+        },
+        h(
+          "div",
+          {
+            className:
+              "flex flex-wrap items-start justify-between gap-3",
+          },
+          h(
+            "div",
+            null,
+            h(
+              "a",
+              {
+                href: `/asset-management/installation/${encodeURIComponent(
+                  installation.installation_id
+                )}`,
+                className:
+                  "text-base font-bold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
+              },
+              installation.installation_id
+            ),
+            h(
+              "p",
+              {
+                className:
+                  "mt-0.5 text-xs text-slate-500",
+              },
+              `Client ${installation.client_id} | Location ${installation.location_id}`
+            )
+          ),
+          h(
+            "span",
+            {
+              className:
+                "rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-800",
+            },
+            installation.status
+          )
+        ),
+        h(
+          "div",
+          {
+            className:
+              "mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4",
+          },
+          h(
+            "p",
+            null,
+            `Date: ${displayValue(
+              installation.installation_date
+            )}`
+          ),
+          h(
+            "p",
+            null,
+            `Type: ${displayValue(
+              installation.installation_type
+            )}`
+          ),
+          h(
+            "p",
+            null,
+            `Logger: ${displayValue(
+              installation.logger_id
+            )}`
+          ),
+          h(
+            "p",
+            null,
+            `FTP ID: ${displayValue(
+              installation.ftp_id
+            )}`
+          )
+        )
+      )
   );
 
   return h(
     "main",
     {
       className:
-        "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+        "min-h-screen bg-slate-100 px-3 py-5 sm:px-5",
     },
     h(
       "div",
       {
-        className: "mx-auto max-w-6xl",
+        className: "mx-auto max-w-7xl",
       },
       h(
         "header",
         {
           className:
-            "mb-8 flex flex-wrap items-start justify-between gap-4",
+            "mb-5 flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
@@ -686,7 +711,7 @@ export default async function SearchPage({
             "h1",
             {
               className:
-                "text-3xl font-bold text-slate-900",
+                "text-2xl font-bold text-slate-900",
             },
             "Search / Find"
           ),
@@ -694,7 +719,7 @@ export default async function SearchPage({
             "p",
             {
               className:
-                "mt-2 text-sm text-slate-600",
+                "mt-1 text-xs text-slate-600",
             },
             `Signed in as ${user.email ?? ""}`
           ),
@@ -702,7 +727,7 @@ export default async function SearchPage({
             "p",
             {
               className:
-                "mt-3 max-w-3xl text-slate-700",
+                "mt-2 max-w-3xl text-sm text-slate-700",
             },
             "Search for clients, locations, installations, stock items, products and serial numbers."
           )
@@ -710,14 +735,14 @@ export default async function SearchPage({
         h(
           "div",
           {
-            className: "flex flex-wrap gap-3",
+            className: "flex flex-wrap gap-2",
           },
           h(
             "a",
             {
               href: "/asset-management",
               className:
-                "rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50",
+                "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50",
             },
             "Asset Management Home"
           ),
@@ -726,17 +751,18 @@ export default async function SearchPage({
             {
               href: "/",
               className:
-                "rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800",
+                "rounded-md bg-slate-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-800",
             },
             "Systems Home"
           )
         )
       ),
+
       h(
         "section",
         {
           className:
-            "rounded-xl border border-slate-200 bg-white p-5 shadow-sm",
+            "rounded-lg border border-slate-200 bg-white p-4 shadow-sm",
         },
         h(
           "form",
@@ -744,7 +770,7 @@ export default async function SearchPage({
             action: "/asset-management/search",
             method: "get",
             className:
-              "flex flex-col gap-3 sm:flex-row",
+              "flex flex-col gap-2 sm:flex-row",
           },
           h("input", {
             type: "search",
@@ -754,14 +780,14 @@ export default async function SearchPage({
             placeholder:
               "Client, location, asset ID, serial, product, logger or installation...",
             className:
-              "min-w-0 flex-1 rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-amber-500",
+              "min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-amber-500",
           }),
           h(
             "button",
             {
               type: "submit",
               className:
-                "rounded-lg bg-amber-700 px-6 py-3 font-semibold text-white hover:bg-amber-800",
+                "rounded-md bg-amber-700 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-800",
             },
             "Search"
           ),
@@ -770,7 +796,7 @@ export default async function SearchPage({
             {
               href: "/asset-management/search",
               className:
-                "rounded-lg border border-slate-300 bg-white px-6 py-3 text-center font-semibold text-slate-700 hover:bg-slate-50",
+                "rounded-md border border-slate-300 bg-white px-5 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50",
             },
             "Clear"
           )
@@ -779,20 +805,21 @@ export default async function SearchPage({
           "p",
           {
             className:
-              "mt-3 text-sm text-slate-500",
+              "mt-2 text-xs text-slate-500",
           },
-          "Enter at least two characters. Results are limited to the first 25 clients, locations and installations, and the first 50 asset-position records."
+          "Enter at least two characters. Results are limited to 25 clients, locations and installations, and 50 asset-position records."
         )
       ),
+
       errors.length > 0
         ? h(
             "section",
             {
               className:
-                "mt-6 rounded-xl border border-red-200 bg-red-50 p-5 text-red-900",
+                "mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900",
             },
             h(
-              "h2",
+              "p",
               {
                 className: "font-semibold",
               },
@@ -802,7 +829,7 @@ export default async function SearchPage({
               "ul",
               {
                 className:
-                  "mt-3 list-disc space-y-1 pl-5 text-sm",
+                  "mt-2 list-disc space-y-1 pl-5",
               },
               ...errors.map((error) =>
                 h(
@@ -816,18 +843,19 @@ export default async function SearchPage({
             )
           )
         : null,
+
       safeSearchText.length === 0
         ? h(
             "section",
             {
               className:
-                "mt-8 rounded-xl border border-amber-200 bg-amber-50 p-8 text-center",
+                "mt-6 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center",
             },
             h(
               "h2",
               {
                 className:
-                  "text-xl font-semibold text-amber-900",
+                  "text-lg font-semibold text-amber-900",
               },
               "Enter a search above"
             ),
@@ -835,9 +863,9 @@ export default async function SearchPage({
               "p",
               {
                 className:
-                  "mt-2 text-amber-800",
+                  "mt-1 text-sm text-amber-800",
               },
-              "Examples include a client name, location, asset ID, serial number, product code, logger ID or installation ID."
+              "Examples include a client, location, stock item, serial, product code, logger or installation ID."
             )
           )
         : safeSearchText.length < 2
@@ -845,7 +873,7 @@ export default async function SearchPage({
               "section",
               {
                 className:
-                  "mt-8 rounded-xl border border-amber-200 bg-amber-50 p-8 text-center text-amber-900",
+                  "mt-6 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-900",
               },
               "Please enter at least two characters."
             )
@@ -856,7 +884,7 @@ export default async function SearchPage({
                 "p",
                 {
                   className:
-                    "mt-6 text-sm font-semibold text-slate-700",
+                    "mt-4 text-xs font-semibold text-slate-700",
                 },
                 `Results for "${safeSearchText}"`
               ),
@@ -881,11 +909,12 @@ export default async function SearchPage({
                 installationCards
               )
             ),
+
       h(
         "section",
         {
           className:
-            "mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900",
+            "mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900",
         },
         h(
           "p",
@@ -897,7 +926,7 @@ export default async function SearchPage({
         h(
           "p",
           {
-            className: "mt-1",
+            className: "mt-0.5",
           },
           "This page performs SELECT queries only. It does not create, edit, remove or change any Hardware Database records."
         )
