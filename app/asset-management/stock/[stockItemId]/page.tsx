@@ -75,6 +75,38 @@ function displayValue(
   return String(value);
 }
 
+function formatDate(
+  value: string | null | undefined
+) {
+  if (!value) {
+    return "Not recorded";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString("en-NZ");
+}
+
+function formatDateTime(
+  value: string | null | undefined
+) {
+  if (!value) {
+    return "Not recorded";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("en-NZ");
+}
+
 function detailField(
   label: string,
   value: string | number | null | undefined
@@ -83,13 +115,13 @@ function detailField(
     "div",
     {
       className:
-        "rounded-lg border border-slate-200 bg-slate-50 p-4",
+        "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
     },
     h(
       "p",
       {
         className:
-          "text-xs font-semibold uppercase tracking-wide text-slate-500",
+          "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
       },
       label
     ),
@@ -97,10 +129,53 @@ function detailField(
       "p",
       {
         className:
-          "mt-1 break-words font-medium text-slate-900",
+          "mt-0.5 break-words text-sm font-medium leading-5 text-slate-900",
       },
       displayValue(value)
     )
+  );
+}
+
+function navigationButton(
+  href: string,
+  text: string,
+  primary = false
+) {
+  return h(
+    "a",
+    {
+      href,
+      className: primary
+        ? "rounded-md bg-slate-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-800"
+        : "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50",
+    },
+    text
+  );
+}
+
+function installationLink(
+  installationId: string | null
+) {
+  if (!installationId) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/installation/${encodeURIComponent(
+        installationId
+      )}`,
+      className:
+        "font-semibold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
+    },
+    installationId
   );
 }
 
@@ -146,28 +221,40 @@ export default async function StockDetailPage({
       "main",
       {
         className:
-          "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+          "min-h-screen bg-slate-100 px-4 py-5",
       },
       h(
         "section",
         {
           className:
-            "mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-8 shadow-sm",
+            "mx-auto max-w-3xl rounded-lg border border-red-200 bg-white p-5 shadow-sm",
         },
         h(
           "h1",
           {
             className:
-              "text-2xl font-bold text-red-800",
+              "text-xl font-bold text-red-800",
           },
           "Hardware Database access denied"
         ),
         h(
           "p",
           {
-            className: "mt-3 text-slate-700",
+            className:
+              "mt-2 text-sm text-slate-700",
           },
           "The signed-in email is not in the approved Hardware Database staff list."
+        ),
+        h(
+          "div",
+          {
+            className: "mt-4",
+          },
+          navigationButton(
+            "/asset-management",
+            "Return to Asset Management",
+            true
+          )
         )
       )
     );
@@ -219,43 +306,45 @@ export default async function StockDetailPage({
       "main",
       {
         className:
-          "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+          "min-h-screen bg-slate-100 px-4 py-5",
       },
       h(
-        "div",
+        "section",
         {
-          className: "mx-auto max-w-4xl",
+          className:
+            "mx-auto max-w-4xl rounded-lg border border-amber-200 bg-white p-5 shadow-sm",
         },
+        h(
+          "h1",
+          {
+            className:
+              "text-xl font-bold text-slate-900",
+          },
+          "Stock item not found"
+        ),
+        h(
+          "p",
+          {
+            className:
+              "mt-2 text-sm text-slate-700",
+          },
+          positionError ??
+            `No stock item was found with ID ${stockItemId}.`
+        ),
         h(
           "div",
           {
             className:
-              "rounded-xl border border-amber-200 bg-white p-8 shadow-sm",
+              "mt-4 flex flex-wrap gap-2",
           },
-          h(
-            "h1",
-            {
-              className:
-                "text-2xl font-bold text-slate-900",
-            },
-            "Stock item not found"
-          ),
-          h(
-            "p",
-            {
-              className: "mt-3 text-slate-700",
-            },
-            positionError ??
-              `No stock item was found with ID ${stockItemId}.`
-          ),
-          h(
-            "a",
-            {
-              href: "/asset-management/search",
-              className:
-                "mt-6 inline-flex rounded-lg bg-amber-700 px-4 py-2 font-semibold text-white hover:bg-amber-800",
-            },
+          navigationButton(
+            "/asset-management/search",
             "Return to Search"
+          ),
+          navigationButton(
+            "/asset-management",
+            "Asset Management Home",
+            true
           )
         )
       )
@@ -272,14 +361,13 @@ export default async function StockDetailPage({
           key:
             position.installation_asset_id ??
             `${position.stock_item_id}-${index}`,
-          className:
-            "rounded-xl border border-slate-200 bg-white p-5 shadow-sm",
+          className: "px-4 py-3",
         },
         h(
           "div",
           {
             className:
-              "flex flex-wrap items-start justify-between gap-4",
+              "flex flex-wrap items-start justify-between gap-3",
           },
           h(
             "div",
@@ -288,7 +376,7 @@ export default async function StockDetailPage({
               "h3",
               {
                 className:
-                  "text-lg font-bold text-slate-900",
+                  "text-base font-bold text-slate-900",
               },
               position.current_position
             ),
@@ -296,10 +384,17 @@ export default async function StockDetailPage({
               "p",
               {
                 className:
-                  "mt-1 text-sm text-slate-500",
+                  "mt-0.5 text-xs text-slate-500",
               },
               position.installation_id
-                ? `Installation ${position.installation_id}`
+                ? h(
+                    "span",
+                    null,
+                    "Installation ",
+                    installationLink(
+                      position.installation_id
+                    )
+                  )
                 : "Not currently assigned to an installation"
             )
           ),
@@ -307,7 +402,7 @@ export default async function StockDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900",
+                "rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900",
             },
             position.lifecycle_status
           )
@@ -316,7 +411,7 @@ export default async function StockDetailPage({
           "div",
           {
             className:
-              "mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+              "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
           },
           detailField(
             "Client",
@@ -332,7 +427,7 @@ export default async function StockDetailPage({
           ),
           detailField(
             "Installed at",
-            position.installed_at
+            formatDate(position.installed_at)
           ),
           detailField(
             "Asset role",
@@ -342,12 +437,33 @@ export default async function StockDetailPage({
             "Arrangement",
             position.asset_arrangement
           ),
-          detailField(
-            "Installation ID",
-            position.installation_id
+          h(
+            "div",
+            {
+              className:
+                "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
+            },
+            h(
+              "p",
+              {
+                className:
+                  "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
+              },
+              "Installation ID"
+            ),
+            h(
+              "p",
+              {
+                className:
+                  "mt-0.5 break-words text-sm leading-5",
+              },
+              installationLink(
+                position.installation_id
+              )
+            )
           ),
           detailField(
-            "Installation asset ID",
+            "Assignment ID",
             position.installation_asset_id
           )
         )
@@ -359,13 +475,13 @@ export default async function StockDetailPage({
       "article",
       {
         key: event.asset_event_id,
-        className: "p-5",
+        className: "px-4 py-3",
       },
       h(
         "div",
         {
           className:
-            "flex flex-wrap items-start justify-between gap-4",
+            "flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
@@ -374,7 +490,7 @@ export default async function StockDetailPage({
             "h3",
             {
               className:
-                "text-lg font-bold text-slate-900",
+                "text-base font-bold text-slate-900",
             },
             event.event_type
           ),
@@ -382,18 +498,16 @@ export default async function StockDetailPage({
             "p",
             {
               className:
-                "mt-1 text-sm text-slate-500",
+                "mt-0.5 text-xs text-slate-500",
             },
-            new Date(
-              event.event_date
-            ).toLocaleString("en-NZ")
+            formatDateTime(event.event_date)
           )
         ),
         h(
           "span",
           {
             className:
-              "rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800",
+              "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800",
           },
           event.source
         )
@@ -402,7 +516,7 @@ export default async function StockDetailPage({
         "div",
         {
           className:
-            "mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+            "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
         },
         detailField(
           "Previous lifecycle",
@@ -420,13 +534,55 @@ export default async function StockDetailPage({
           "To warehouse",
           event.to_warehouse
         ),
-        detailField(
-          "From installation",
-          event.from_installation_id
+        h(
+          "div",
+          {
+            className:
+              "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
+          },
+          h(
+            "p",
+            {
+              className:
+                "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
+            },
+            "From installation"
+          ),
+          h(
+            "p",
+            {
+              className:
+                "mt-0.5 text-sm leading-5",
+            },
+            installationLink(
+              event.from_installation_id
+            )
+          )
         ),
-        detailField(
-          "To installation",
-          event.to_installation_id
+        h(
+          "div",
+          {
+            className:
+              "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
+          },
+          h(
+            "p",
+            {
+              className:
+                "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
+            },
+            "To installation"
+          ),
+          h(
+            "p",
+            {
+              className:
+                "mt-0.5 text-sm leading-5",
+            },
+            installationLink(
+              event.to_installation_id
+            )
+          )
         ),
         detailField(
           "From client / location",
@@ -454,7 +610,7 @@ export default async function StockDetailPage({
             "div",
             {
               className:
-                "mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700",
+                "mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700",
             },
             h(
               "p",
@@ -466,7 +622,7 @@ export default async function StockDetailPage({
             h(
               "p",
               {
-                className: "mt-1",
+                className: "mt-0.5",
               },
               `Notes: ${displayValue(
                 event.notes
@@ -475,7 +631,7 @@ export default async function StockDetailPage({
             h(
               "p",
               {
-                className: "mt-1",
+                className: "mt-0.5",
               },
               `Recorded by: ${displayValue(
                 event.created_by_name
@@ -490,18 +646,19 @@ export default async function StockDetailPage({
     "main",
     {
       className:
-        "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+        "min-h-screen bg-slate-100 px-3 py-5 sm:px-5",
     },
     h(
       "div",
       {
-        className: "mx-auto max-w-6xl",
+        className: "mx-auto max-w-7xl",
       },
+
       h(
         "header",
         {
           className:
-            "mb-8 flex flex-wrap items-start justify-between gap-4",
+            "mb-5 flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
@@ -510,7 +667,7 @@ export default async function StockDetailPage({
             "p",
             {
               className:
-                "text-sm font-semibold uppercase tracking-wide text-amber-700",
+                "text-xs font-semibold uppercase tracking-wide text-amber-700",
             },
             "Stock Item Detail"
           ),
@@ -518,7 +675,7 @@ export default async function StockDetailPage({
             "h1",
             {
               className:
-                "mt-1 text-3xl font-bold text-slate-900",
+                "mt-0.5 text-2xl font-bold text-slate-900",
             },
             current.stock_item_id
           ),
@@ -526,7 +683,7 @@ export default async function StockDetailPage({
             "p",
             {
               className:
-                "mt-2 text-lg text-slate-700",
+                "mt-1 text-base text-slate-700",
             },
             current.product_description
           ),
@@ -534,7 +691,7 @@ export default async function StockDetailPage({
             "p",
             {
               className:
-                "mt-2 text-sm text-slate-500",
+                "mt-1 text-xs text-slate-500",
             },
             `Signed in as ${user.email ?? ""}`
           )
@@ -542,41 +699,33 @@ export default async function StockDetailPage({
         h(
           "div",
           {
-            className: "flex flex-wrap gap-3",
+            className: "flex flex-wrap gap-2",
           },
-          h(
-            "a",
-            {
-              href: `/asset-management/search?q=${encodeURIComponent(
-                current.stock_item_id
-              )}`,
-              className:
-                "rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50",
-            },
+          navigationButton(
+            `/asset-management/search?q=${encodeURIComponent(
+              current.stock_item_id
+            )}`,
             "Return to Search"
           ),
-          h(
-            "a",
-            {
-              href: "/asset-management",
-              className:
-                "rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800",
-            },
-            "Asset Management Home"
+          navigationButton(
+            "/asset-management",
+            "Asset Management Home",
+            true
           )
         )
       ),
+
       h(
         "section",
         {
           className:
-            "rounded-xl border border-slate-200 bg-white p-6 shadow-sm",
+            "rounded-lg border border-slate-200 bg-white p-4 shadow-sm",
         },
         h(
           "div",
           {
             className:
-              "flex flex-wrap items-start justify-between gap-4",
+              "flex flex-wrap items-start justify-between gap-3",
           },
           h(
             "div",
@@ -585,7 +734,7 @@ export default async function StockDetailPage({
               "h2",
               {
                 className:
-                  "text-xl font-bold text-slate-900",
+                  "text-lg font-bold text-slate-900",
               },
               "Current stock record"
             ),
@@ -593,7 +742,7 @@ export default async function StockDetailPage({
               "p",
               {
                 className:
-                  "mt-1 text-slate-600",
+                  "mt-0.5 text-sm text-slate-600",
               },
               current.current_position
             )
@@ -602,7 +751,7 @@ export default async function StockDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-amber-100 px-4 py-2 font-semibold text-amber-900",
+                "rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900",
             },
             current.lifecycle_status
           )
@@ -611,7 +760,7 @@ export default async function StockDetailPage({
           "div",
           {
             className:
-              "mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+              "mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6",
           },
           detailField(
             "Stock item ID",
@@ -634,11 +783,11 @@ export default async function StockDetailPage({
             current.product_serial
           ),
           detailField(
-            "Lifecycle status",
+            "Lifecycle",
             current.lifecycle_status
           ),
           detailField(
-            "Asset classification",
+            "Classification",
             current.asset_classification
           ),
           detailField(
@@ -657,9 +806,30 @@ export default async function StockDetailPage({
             "Location",
             current.location_name
           ),
-          detailField(
-            "Installation",
-            current.installation_id
+          h(
+            "div",
+            {
+              className:
+                "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
+            },
+            h(
+              "p",
+              {
+                className:
+                  "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
+              },
+              "Installation"
+            ),
+            h(
+              "p",
+              {
+                className:
+                  "mt-0.5 text-sm leading-5",
+              },
+              installationLink(
+                current.installation_id
+              )
+            )
           )
         ),
         current.notes
@@ -667,13 +837,13 @@ export default async function StockDetailPage({
               "div",
               {
                 className:
-                  "mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4",
+                  "mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2",
               },
               h(
                 "p",
                 {
                   className:
-                    "text-xs font-semibold uppercase tracking-wide text-slate-500",
+                    "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
                 },
                 "Notes"
               ),
@@ -681,29 +851,31 @@ export default async function StockDetailPage({
                 "p",
                 {
                   className:
-                    "mt-1 whitespace-pre-wrap text-slate-800",
+                    "mt-0.5 whitespace-pre-wrap text-sm text-slate-800",
                 },
                 current.notes
               )
             )
           : null
       ),
+
       h(
         "section",
         {
-          className: "mt-8",
+          className:
+            "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
         h(
           "div",
           {
             className:
-              "mb-4 flex items-center justify-between gap-4",
+              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
           },
           h(
             "h2",
             {
               className:
-                "text-2xl font-bold text-slate-900",
+                "text-lg font-semibold",
             },
             "Current Position and Assignments"
           ),
@@ -711,7 +883,7 @@ export default async function StockDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-slate-800 px-3 py-1 text-sm font-semibold text-white",
+                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
             },
             positions.length.toLocaleString()
           )
@@ -719,28 +891,30 @@ export default async function StockDetailPage({
         h(
           "div",
           {
-            className: "space-y-4",
+            className:
+              "divide-y divide-slate-200",
           },
           ...positionCards
         )
       ),
+
       h(
         "section",
         {
           className:
-            "mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
+            "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
         h(
           "div",
           {
             className:
-              "flex items-center justify-between gap-4 bg-slate-800 px-5 py-4 text-white",
+              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
           },
           h(
             "h2",
             {
               className:
-                "text-xl font-semibold",
+                "text-lg font-semibold",
             },
             "Asset Event History"
           ),
@@ -748,7 +922,7 @@ export default async function StockDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-800",
+                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
             },
             history.length.toLocaleString()
           )
@@ -758,7 +932,7 @@ export default async function StockDetailPage({
               "p",
               {
                 className:
-                  "p-5 text-red-700",
+                  "p-4 text-sm text-red-700",
               },
               `History could not be loaded: ${historyError}`
             )
@@ -766,13 +940,13 @@ export default async function StockDetailPage({
             ? h(
                 "div",
                 {
-                  className: "p-5",
+                  className: "p-4",
                 },
                 h(
                   "p",
                   {
                     className:
-                      "font-medium text-slate-800",
+                      "text-sm font-medium text-slate-800",
                   },
                   "No post-go-live asset events have been recorded."
                 ),
@@ -780,7 +954,7 @@ export default async function StockDetailPage({
                   "p",
                   {
                     className:
-                      "mt-2 text-sm text-slate-600",
+                      "mt-1 text-xs text-slate-600",
                   },
                   "Legacy asset history remains in the existing business spreadsheet."
                 )
@@ -794,11 +968,12 @@ export default async function StockDetailPage({
                 ...historyCards
               )
       ),
+
       h(
         "section",
         {
           className:
-            "mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900",
+            "mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900",
         },
         h(
           "p",
@@ -810,7 +985,7 @@ export default async function StockDetailPage({
         h(
           "p",
           {
-            className: "mt-1",
+            className: "mt-0.5",
           },
           "This screen retrieves current position and event-history information only. It does not create, edit or change the stock item."
         )
