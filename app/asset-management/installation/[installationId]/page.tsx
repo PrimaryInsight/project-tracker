@@ -147,13 +147,13 @@ function detailField(
     "div",
     {
       className:
-        "rounded-lg border border-slate-200 bg-slate-50 p-4",
+        "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
     },
     h(
       "p",
       {
         className:
-          "text-xs font-semibold uppercase tracking-wide text-slate-500",
+          "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
       },
       label
     ),
@@ -161,7 +161,7 @@ function detailField(
       "p",
       {
         className:
-          "mt-1 break-words font-medium text-slate-900",
+          "mt-0.5 break-words text-sm font-medium leading-5 text-slate-900",
       },
       displayValue(value)
     )
@@ -178,8 +178,8 @@ function navigationButton(
     {
       href,
       className: primary
-        ? "rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800"
-        : "rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50",
+        ? "rounded-md bg-slate-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-800"
+        : "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50",
     },
     text
   );
@@ -227,33 +227,40 @@ export default async function InstallationDetailPage({
       "main",
       {
         className:
-          "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+          "min-h-screen bg-slate-100 px-4 py-5",
       },
       h(
         "section",
         {
           className:
-            "mx-auto max-w-3xl rounded-xl border border-red-200 bg-white p-8 shadow-sm",
+            "mx-auto max-w-3xl rounded-lg border border-red-200 bg-white p-5 shadow-sm",
         },
         h(
           "h1",
           {
             className:
-              "text-2xl font-bold text-red-800",
+              "text-xl font-bold text-red-800",
           },
           "Hardware Database access denied"
         ),
         h(
           "p",
           {
-            className: "mt-3 text-slate-700",
+            className:
+              "mt-2 text-sm text-slate-700",
           },
           "The signed-in email is not in the approved Hardware Database staff list."
         ),
-        navigationButton(
-          "/asset-management",
-          "Return to Asset Management",
-          true
+        h(
+          "div",
+          {
+            className: "mt-4",
+          },
+          navigationButton(
+            "/asset-management",
+            "Return to Asset Management",
+            true
+          )
         )
       )
     );
@@ -282,49 +289,45 @@ export default async function InstallationDetailPage({
       "main",
       {
         className:
-          "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+          "min-h-screen bg-slate-100 px-4 py-5",
       },
       h(
-        "div",
+        "section",
         {
-          className: "mx-auto max-w-4xl",
+          className:
+            "mx-auto max-w-4xl rounded-lg border border-amber-200 bg-white p-5 shadow-sm",
         },
         h(
-          "section",
+          "h1",
           {
             className:
-              "rounded-xl border border-amber-200 bg-white p-8 shadow-sm",
+              "text-xl font-bold text-slate-900",
           },
-          h(
-            "h1",
-            {
-              className:
-                "text-2xl font-bold text-slate-900",
-            },
-            "Installation not found"
+          "Installation not found"
+        ),
+        h(
+          "p",
+          {
+            className:
+              "mt-2 text-sm text-slate-700",
+          },
+          installationError ??
+            `No installation was found with ID ${installationId}.`
+        ),
+        h(
+          "div",
+          {
+            className:
+              "mt-4 flex flex-wrap gap-2",
+          },
+          navigationButton(
+            "/asset-management/search",
+            "Return to Search"
           ),
-          h(
-            "p",
-            {
-              className: "mt-3 text-slate-700",
-            },
-            installationError ??
-              `No installation was found with ID ${installationId}.`
-          ),
-          h(
-            "div",
-            {
-              className: "mt-6 flex flex-wrap gap-3",
-            },
-            navigationButton(
-              "/asset-management/search",
-              "Return to Search"
-            ),
-            navigationButton(
-              "/asset-management",
-              "Asset Management Home",
-              true
-            )
+          navigationButton(
+            "/asset-management",
+            "Asset Management Home",
+            true
           )
         )
       )
@@ -430,37 +433,33 @@ export default async function InstallationDetailPage({
       "article",
       {
         key: asset.installation_asset_id,
-        className: "p-5",
+        className: "px-4 py-3",
       },
       h(
         "div",
         {
           className:
-            "flex flex-wrap items-start justify-between gap-4",
+            "flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
           null,
           h(
-            "h3",
-            null,
-            h(
-              "a",
-              {
-                href: `/asset-management/stock/${encodeURIComponent(
-                  asset.stock_item_id
-                )}`,
-                className:
-                  "text-lg font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
-              },
-              asset.stock_item_id
-            )
+            "a",
+            {
+              href: `/asset-management/stock/${encodeURIComponent(
+                asset.stock_item_id
+              )}`,
+              className:
+                "text-base font-bold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
+            },
+            asset.stock_item_id
           ),
           h(
             "p",
             {
               className:
-                "mt-1 text-sm text-slate-600",
+                "mt-0.5 text-sm text-slate-600",
             },
             asset.product_description
           )
@@ -469,7 +468,7 @@ export default async function InstallationDetailPage({
           "span",
           {
             className:
-              "rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800",
+              "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800",
           },
           asset.lifecycle_status
         )
@@ -478,7 +477,7 @@ export default async function InstallationDetailPage({
         "div",
         {
           className:
-            "mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+            "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
         },
         detailField(
           "Product code",
@@ -505,11 +504,11 @@ export default async function InstallationDetailPage({
           formatDate(asset.installed_at)
         ),
         detailField(
-          "Stock record status",
+          "Stock status",
           asset.stock_record_status
         ),
         detailField(
-          "Installation asset ID",
+          "Assignment ID",
           asset.installation_asset_id
         )
       )
@@ -521,13 +520,13 @@ export default async function InstallationDetailPage({
       "article",
       {
         key: event.asset_event_id,
-        className: "p-5",
+        className: "px-4 py-3",
       },
       h(
         "div",
         {
           className:
-            "flex flex-wrap items-start justify-between gap-4",
+            "flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
@@ -536,7 +535,7 @@ export default async function InstallationDetailPage({
             "h3",
             {
               className:
-                "text-lg font-bold text-slate-900",
+                "text-base font-bold text-slate-900",
             },
             event.event_type
           ),
@@ -544,7 +543,7 @@ export default async function InstallationDetailPage({
             "p",
             {
               className:
-                "mt-1 text-sm text-slate-500",
+                "mt-0.5 text-xs text-slate-500",
             },
             formatDateTime(event.event_date)
           )
@@ -553,7 +552,7 @@ export default async function InstallationDetailPage({
           "span",
           {
             className:
-              "rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800",
+              "rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800",
           },
           event.source
         )
@@ -562,7 +561,7 @@ export default async function InstallationDetailPage({
         "div",
         {
           className:
-            "mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+            "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
         },
         detailField(
           "Stock item",
@@ -602,7 +601,7 @@ export default async function InstallationDetailPage({
             "div",
             {
               className:
-                "mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700",
+                "mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700",
             },
             h(
               "p",
@@ -612,7 +611,7 @@ export default async function InstallationDetailPage({
             h(
               "p",
               {
-                className: "mt-1",
+                className: "mt-0.5",
               },
               `Notes: ${displayValue(event.notes)}`
             )
@@ -625,18 +624,18 @@ export default async function InstallationDetailPage({
     "main",
     {
       className:
-        "min-h-screen bg-slate-100 px-4 py-8 sm:px-6",
+        "min-h-screen bg-slate-100 px-3 py-5 sm:px-5",
     },
     h(
       "div",
       {
-        className: "mx-auto max-w-6xl",
+        className: "mx-auto max-w-7xl",
       },
       h(
         "header",
         {
           className:
-            "mb-8 flex flex-wrap items-start justify-between gap-4",
+            "mb-5 flex flex-wrap items-start justify-between gap-3",
         },
         h(
           "div",
@@ -645,7 +644,7 @@ export default async function InstallationDetailPage({
             "p",
             {
               className:
-                "text-sm font-semibold uppercase tracking-wide text-violet-700",
+                "text-xs font-semibold uppercase tracking-wide text-violet-700",
             },
             "Installation Detail"
           ),
@@ -653,7 +652,7 @@ export default async function InstallationDetailPage({
             "h1",
             {
               className:
-                "mt-1 text-3xl font-bold text-slate-900",
+                "mt-0.5 text-2xl font-bold text-slate-900",
             },
             installation.installation_id
           ),
@@ -661,7 +660,7 @@ export default async function InstallationDetailPage({
             "p",
             {
               className:
-                "mt-2 text-lg text-slate-700",
+                "mt-1 text-base text-slate-700",
             },
             `${displayValue(
               client?.client_name
@@ -673,7 +672,7 @@ export default async function InstallationDetailPage({
             "p",
             {
               className:
-                "mt-2 text-sm text-slate-500",
+                "mt-1 text-xs text-slate-500",
             },
             `Signed in as ${user.email ?? ""}`
           )
@@ -681,7 +680,7 @@ export default async function InstallationDetailPage({
         h(
           "div",
           {
-            className: "flex flex-wrap gap-3",
+            className: "flex flex-wrap gap-2",
           },
           navigationButton(
             `/asset-management/search?q=${encodeURIComponent(
@@ -702,10 +701,10 @@ export default async function InstallationDetailPage({
             "section",
             {
               className:
-                "mb-6 rounded-xl border border-red-200 bg-red-50 p-5 text-red-900",
+                "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900",
             },
             h(
-              "h2",
+              "p",
               {
                 className: "font-semibold",
               },
@@ -715,7 +714,7 @@ export default async function InstallationDetailPage({
               "ul",
               {
                 className:
-                  "mt-3 list-disc space-y-1 pl-5 text-sm",
+                  "mt-2 list-disc space-y-1 pl-5",
               },
               ...loadErrors.map((error) =>
                 h(
@@ -734,13 +733,13 @@ export default async function InstallationDetailPage({
         "section",
         {
           className:
-            "rounded-xl border border-slate-200 bg-white p-6 shadow-sm",
+            "rounded-lg border border-slate-200 bg-white p-4 shadow-sm",
         },
         h(
           "div",
           {
             className:
-              "flex flex-wrap items-start justify-between gap-4",
+              "flex flex-wrap items-start justify-between gap-3",
           },
           h(
             "div",
@@ -749,7 +748,7 @@ export default async function InstallationDetailPage({
               "h2",
               {
                 className:
-                  "text-xl font-bold text-slate-900",
+                  "text-lg font-bold text-slate-900",
               },
               "Installation record"
             ),
@@ -757,7 +756,7 @@ export default async function InstallationDetailPage({
               "p",
               {
                 className:
-                  "mt-1 text-slate-600",
+                  "mt-0.5 text-sm text-slate-600",
               },
               `${displayValue(
                 client?.client_name
@@ -770,7 +769,7 @@ export default async function InstallationDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-violet-100 px-4 py-2 font-semibold text-violet-800",
+                "rounded-full bg-violet-100 px-3 py-1 text-sm font-semibold text-violet-800",
             },
             installation.status
           )
@@ -779,20 +778,20 @@ export default async function InstallationDetailPage({
           "div",
           {
             className:
-              "mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+              "mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8",
           },
           detailField(
             "Installation ID",
             installation.installation_id
           ),
           detailField(
-            "Installation date",
+            "Date",
             formatDate(
               installation.installation_date
             )
           ),
           detailField(
-            "Installation type",
+            "Type",
             installation.installation_type
           ),
           detailField(
@@ -804,7 +803,7 @@ export default async function InstallationDetailPage({
             installation.client_id
           ),
           detailField(
-            "Client name",
+            "Client",
             client?.client_name
           ),
           detailField(
@@ -812,7 +811,7 @@ export default async function InstallationDetailPage({
             installation.location_id
           ),
           detailField(
-            "Location name",
+            "Location",
             location?.location_name
           ),
           detailField(
@@ -840,11 +839,11 @@ export default async function InstallationDetailPage({
             installation.other_sensors
           ),
           detailField(
-            "Closed at",
+            "Closed",
             formatDate(installation.closed_at)
           ),
           detailField(
-            "Last updated",
+            "Updated",
             formatDateTime(
               installation.updated_at
             )
@@ -855,13 +854,13 @@ export default async function InstallationDetailPage({
               "div",
               {
                 className:
-                  "mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4",
+                  "mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2",
               },
               h(
                 "p",
                 {
                   className:
-                    "text-xs font-semibold uppercase tracking-wide text-slate-500",
+                    "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
                 },
                 "Installation notes"
               ),
@@ -869,7 +868,7 @@ export default async function InstallationDetailPage({
                 "p",
                 {
                   className:
-                    "mt-1 whitespace-pre-wrap text-slate-800",
+                    "mt-0.5 whitespace-pre-wrap text-sm text-slate-800",
                 },
                 installation.notes
               )
@@ -881,19 +880,19 @@ export default async function InstallationDetailPage({
         "section",
         {
           className:
-            "mt-8 grid gap-6 lg:grid-cols-2",
+            "mt-4 grid gap-4 lg:grid-cols-2",
         },
         h(
           "article",
           {
             className:
-              "rounded-xl border border-slate-200 bg-white p-6 shadow-sm",
+              "rounded-lg border border-slate-200 bg-white p-4 shadow-sm",
           },
           h(
             "h2",
             {
               className:
-                "text-xl font-bold text-slate-900",
+                "text-lg font-bold text-slate-900",
             },
             "Client"
           ),
@@ -901,14 +900,14 @@ export default async function InstallationDetailPage({
             "div",
             {
               className:
-                "mt-4 grid gap-3 sm:grid-cols-2",
+                "mt-3 grid gap-2 sm:grid-cols-3",
             },
             detailField(
               "Client name",
               client?.client_name
             ),
             detailField(
-              "Client status",
+              "Status",
               client?.status
             ),
             detailField(
@@ -933,13 +932,13 @@ export default async function InstallationDetailPage({
           "article",
           {
             className:
-              "rounded-xl border border-slate-200 bg-white p-6 shadow-sm",
+              "rounded-lg border border-slate-200 bg-white p-4 shadow-sm",
           },
           h(
             "h2",
             {
               className:
-                "text-xl font-bold text-slate-900",
+                "text-lg font-bold text-slate-900",
             },
             "Location"
           ),
@@ -947,14 +946,14 @@ export default async function InstallationDetailPage({
             "div",
             {
               className:
-                "mt-4 grid gap-3 sm:grid-cols-2",
+                "mt-3 grid gap-2 sm:grid-cols-3",
             },
             detailField(
               "Location name",
               location?.location_name
             ),
             detailField(
-              "Location type",
+              "Type",
               location?.location_type
             ),
             detailField(
@@ -966,11 +965,11 @@ export default async function InstallationDetailPage({
               coordinateText
             ),
             detailField(
-              "Location status",
+              "Status",
               location?.status
             ),
             detailField(
-              "Verification status",
+              "Verification",
               location?.verification_status
             )
           )
@@ -981,19 +980,19 @@ export default async function InstallationDetailPage({
         "section",
         {
           className:
-            "mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
+            "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
         h(
           "div",
           {
             className:
-              "flex items-center justify-between gap-4 bg-slate-800 px-5 py-4 text-white",
+              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
           },
           h(
             "h2",
             {
               className:
-                "text-xl font-semibold",
+                "text-lg font-semibold",
             },
             "Assigned Assets"
           ),
@@ -1001,7 +1000,7 @@ export default async function InstallationDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-800",
+                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
             },
             assets.length.toLocaleString()
           )
@@ -1010,13 +1009,13 @@ export default async function InstallationDetailPage({
           ? h(
               "div",
               {
-                className: "p-5",
+                className: "p-4",
               },
               h(
                 "p",
                 {
                   className:
-                    "font-medium text-slate-800",
+                    "text-sm font-medium text-slate-800",
                 },
                 "No current assets were returned for this installation."
               ),
@@ -1024,7 +1023,7 @@ export default async function InstallationDetailPage({
                 "p",
                 {
                   className:
-                    "mt-2 text-sm text-slate-600",
+                    "mt-1 text-xs text-slate-600",
                 },
                 "The current-installation-assets view returns active current assignments only."
               )
@@ -1043,19 +1042,19 @@ export default async function InstallationDetailPage({
         "section",
         {
           className:
-            "mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
+            "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
         h(
           "div",
           {
             className:
-              "flex items-center justify-between gap-4 bg-slate-800 px-5 py-4 text-white",
+              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
           },
           h(
             "h2",
             {
               className:
-                "text-xl font-semibold",
+                "text-lg font-semibold",
             },
             "Installation Event History"
           ),
@@ -1063,7 +1062,7 @@ export default async function InstallationDetailPage({
             "span",
             {
               className:
-                "rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-800",
+                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
             },
             events.length.toLocaleString()
           )
@@ -1072,13 +1071,13 @@ export default async function InstallationDetailPage({
           ? h(
               "div",
               {
-                className: "p-5",
+                className: "p-4",
               },
               h(
                 "p",
                 {
                   className:
-                    "font-medium text-slate-800",
+                    "text-sm font-medium text-slate-800",
                 },
                 "No post-go-live installation events have been recorded."
               ),
@@ -1086,7 +1085,7 @@ export default async function InstallationDetailPage({
                 "p",
                 {
                   className:
-                    "mt-2 text-sm text-slate-600",
+                    "mt-1 text-xs text-slate-600",
                 },
                 "Legacy installation history remains in the existing business spreadsheet."
               )
@@ -1105,7 +1104,7 @@ export default async function InstallationDetailPage({
         "section",
         {
           className:
-            "mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900",
+            "mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900",
         },
         h(
           "p",
@@ -1117,7 +1116,7 @@ export default async function InstallationDetailPage({
         h(
           "p",
           {
-            className: "mt-1",
+            className: "mt-0.5",
           },
           "This page retrieves installation, client, location, assigned-asset and event information only. It does not create, edit, move, replace, remove or close any records."
         )
