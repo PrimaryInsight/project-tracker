@@ -236,11 +236,61 @@ function parseCoordinate(value: string) {
 
   const parsed = Number(value);
 
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
+  return Number.isFinite(parsed)
+    ? parsed
+    : null;
+}
 
-  return parsed;
+function buildExistingDetailsUrl(
+  clientId: string,
+  locationId: string
+) {
+  return (
+    "/asset-management/field-installation/details" +
+    `?clientId=${encodeURIComponent(
+      clientId
+    )}` +
+    "&locationMode=existing" +
+    `&locationId=${encodeURIComponent(
+      locationId
+    )}`
+  );
+}
+
+function buildNewDetailsUrl(
+  clientId: string,
+  locationName: string,
+  locationType: string,
+  region: string,
+  latitude: string,
+  longitude: string,
+  notes: string
+) {
+  return (
+    "/asset-management/field-installation/details" +
+    `?clientId=${encodeURIComponent(
+      clientId
+    )}` +
+    "&locationMode=new" +
+    `&newLocationName=${encodeURIComponent(
+      locationName
+    )}` +
+    `&newLocationType=${encodeURIComponent(
+      locationType
+    )}` +
+    `&newRegion=${encodeURIComponent(
+      region
+    )}` +
+    `&newLatitude=${encodeURIComponent(
+      latitude
+    )}` +
+    `&newLongitude=${encodeURIComponent(
+      longitude
+    )}` +
+    `&newLocationNotes=${encodeURIComponent(
+      notes
+    )}`
+  );
 }
 
 export default async function FieldInstallationPage({
@@ -372,9 +422,12 @@ export default async function FieldInstallationPage({
   const hardware = createHardwareClient();
 
   let clients: ClientRecord[] = [];
+
   let selectedClient: ClientRecord | null =
     null;
+
   let locations: LocationRecord[] = [];
+
   let selectedLocation: LocationRecord | null =
     null;
 
@@ -490,11 +543,6 @@ export default async function FieldInstallationPage({
     newLongitudeText
   );
 
-  const newLocationSubmitted =
-    mode === "new" &&
-    reviewNew &&
-    newLocationName.length > 0;
-
   const latitudeInvalid =
     newLatitudeText.length > 0 &&
     latitude === null;
@@ -513,7 +561,9 @@ export default async function FieldInstallationPage({
       longitude > 180);
 
   const newLocationValid =
-    newLocationSubmitted &&
+    mode === "new" &&
+    reviewNew &&
+    newLocationName.length > 0 &&
     !latitudeInvalid &&
     !longitudeInvalid &&
     !latitudeOutOfRange &&
@@ -521,7 +571,7 @@ export default async function FieldInstallationPage({
 
   const showingExistingChoices =
     selectedClient !== null &&
-    !selectedLocation &&
+    selectedLocation === null &&
     mode !== "new";
 
   const showingNewLocationForm =
@@ -795,6 +845,27 @@ export default async function FieldInstallationPage({
       )
     );
   }
+
+  const existingDetailsUrl =
+    selectedLocation
+      ? buildExistingDetailsUrl(
+          selectedClientId,
+          selectedLocation.location_id
+        )
+      : "";
+
+  const newDetailsUrl =
+    newLocationValid
+      ? buildNewDetailsUrl(
+          selectedClientId,
+          newLocationName,
+          newLocationType,
+          newRegion,
+          newLatitudeText,
+          newLongitudeText,
+          newNotes
+        )
+      : "";
 
   return h(
     "main",
@@ -1213,12 +1284,13 @@ export default async function FieldInstallationPage({
                   "mt-4 flex flex-wrap gap-2",
               },
               h(
-                "span",
+                "a",
                 {
+                  href: existingDetailsUrl,
                   className:
-                    "inline-flex cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-600",
+                    "rounded-md bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800",
                 },
-                "Continue to Installation Details: Next Stage"
+                "Continue to Installation Details"
               ),
               navigationButton(
                 `/asset-management/field-installation?clientId=${encodeURIComponent(
@@ -1320,31 +1392,41 @@ export default async function FieldInstallationPage({
                   "mt-4 flex flex-wrap gap-2",
               },
               h(
-                "span",
+                "a",
                 {
+                  href: newDetailsUrl,
                   className:
-                    "inline-flex cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-600",
+                    "rounded-md bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800",
                 },
-                "Continue to Installation Details: Next Stage"
+                "Continue to Installation Details"
               ),
               h(
                 "a",
                 {
-                  href: `/asset-management/field-installation?clientId=${encodeURIComponent(
-                    selectedClientId
-                  )}&mode=new&newLocationName=${encodeURIComponent(
-                    newLocationName
-                  )}&newLocationType=${encodeURIComponent(
-                    newLocationType
-                  )}&newRegion=${encodeURIComponent(
-                    newRegion
-                  )}&newLatitude=${encodeURIComponent(
-                    newLatitudeText
-                  )}&newLongitude=${encodeURIComponent(
-                    newLongitudeText
-                  )}&newNotes=${encodeURIComponent(
-                    newNotes
-                  )}`,
+                  href:
+                    "/asset-management/field-installation" +
+                    `?clientId=${encodeURIComponent(
+                      selectedClientId
+                    )}` +
+                    "&mode=new" +
+                    `&newLocationName=${encodeURIComponent(
+                      newLocationName
+                    )}` +
+                    `&newLocationType=${encodeURIComponent(
+                      newLocationType
+                    )}` +
+                    `&newRegion=${encodeURIComponent(
+                      newRegion
+                    )}` +
+                    `&newLatitude=${encodeURIComponent(
+                      newLatitudeText
+                    )}` +
+                    `&newLongitude=${encodeURIComponent(
+                      newLongitudeText
+                    )}` +
+                    `&newNotes=${encodeURIComponent(
+                      newNotes
+                    )}`,
                   className:
                     "rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100",
                 },
@@ -1390,7 +1472,7 @@ export default async function FieldInstallationPage({
                     className:
                       "mt-1 text-sm text-blue-800",
                   },
-                  "Select from the locations already recorded for this client."
+                  "Select from locations already recorded for this client."
                 ),
                 h(
                   "p",
@@ -1642,7 +1724,7 @@ export default async function FieldInstallationPage({
           {
             className: "mt-0.5",
           },
-          "Stage 2 reads clients and locations and carries preview selections in the URL. It does not create clients, locations, installations, asset assignments, or asset events."
+          "Stage 2 reads clients and locations and carries preview selections into Stage 3. It does not create clients, locations, installations, asset assignments, or asset events."
         )
       )
     )
