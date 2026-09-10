@@ -1,4 +1,7 @@
-import { createElement as h } from "react";
+import {
+  createElement as h,
+  type ReactNode,
+} from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 import { createHardwareClient } from "@/lib/hardware-supabase";
@@ -48,16 +51,21 @@ type HistoryRecord = {
   previous_asset_classification: string | null;
   new_asset_classification: string;
   from_installation_id: string | null;
+  from_client_id: string | null;
   from_client_name: string | null;
+  from_location_id: string | null;
   from_location_name: string | null;
   to_installation_id: string | null;
+  to_client_id: string | null;
   to_client_name: string | null;
+  to_location_id: string | null;
   to_location_name: string | null;
   from_warehouse: string | null;
   to_warehouse: string | null;
   reason: string | null;
   notes: string | null;
   created_by_name: string | null;
+  created_at: string;
   source: string;
 };
 
@@ -109,8 +117,15 @@ function formatDateTime(
 
 function detailField(
   label: string,
-  value: string | number | null | undefined
+  content: ReactNode
 ) {
+  const displayedContent =
+    content === null ||
+    content === undefined ||
+    content === ""
+      ? "Not recorded"
+      : content;
+
   return h(
     "div",
     {
@@ -126,12 +141,12 @@ function detailField(
       label
     ),
     h(
-      "p",
+      "div",
       {
         className:
           "mt-0.5 break-words text-sm font-medium leading-5 text-slate-900",
       },
-      displayValue(value)
+      displayedContent
     )
   );
 }
@@ -150,6 +165,60 @@ function navigationButton(
         : "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50",
     },
     text
+  );
+}
+
+function clientLink(
+  clientId: string | null,
+  clientName: string | null
+) {
+  if (!clientId || !clientName) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/client/${encodeURIComponent(
+        clientId
+      )}`,
+      className:
+        "font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-950",
+    },
+    clientName
+  );
+}
+
+function locationLink(
+  locationId: string | null,
+  locationName: string | null
+) {
+  if (!locationId || !locationName) {
+    return h(
+      "span",
+      {
+        className: "text-slate-500",
+      },
+      "Not recorded"
+    );
+  }
+
+  return h(
+    "a",
+    {
+      href: `/asset-management/location/${encodeURIComponent(
+        locationId
+      )}`,
+      className:
+        "font-semibold text-blue-700 underline decoration-blue-300 underline-offset-4 hover:text-blue-950",
+    },
+    locationName
   );
 }
 
@@ -176,6 +245,34 @@ function installationLink(
         "font-semibold text-violet-700 underline decoration-violet-300 underline-offset-4 hover:text-violet-950",
     },
     installationId
+  );
+}
+
+function sectionHeader(
+  title: string,
+  count: number
+) {
+  return h(
+    "div",
+    {
+      className:
+        "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
+    },
+    h(
+      "h2",
+      {
+        className: "text-lg font-semibold",
+      },
+      title
+    ),
+    h(
+      "span",
+      {
+        className:
+          "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
+      },
+      count.toLocaleString()
+    )
   );
 }
 
@@ -277,7 +374,7 @@ export default async function StockDetailPage({
     hardware
       .from("vw_asset_history")
       .select(
-        "asset_event_id, event_date, event_type, stock_item_id, product_serial, product_id, product_description, previous_lifecycle_status, new_lifecycle_status, previous_asset_classification, new_asset_classification, from_installation_id, from_client_name, from_location_name, to_installation_id, to_client_name, to_location_name, from_warehouse, to_warehouse, reason, notes, created_by_name, source"
+        "asset_event_id, event_date, event_type, stock_item_id, product_serial, product_id, product_description, previous_lifecycle_status, new_lifecycle_status, previous_asset_classification, new_asset_classification, from_installation_id, from_client_id, from_client_name, from_location_id, from_location_name, to_installation_id, to_client_id, to_client_name, to_location_id, to_location_name, from_warehouse, to_warehouse, reason, notes, created_by_name, created_at, source"
       )
       .eq("stock_item_id", stockItemId)
       .order("event_date", {
@@ -415,15 +512,21 @@ export default async function StockDetailPage({
           },
           detailField(
             "Client",
-            position.client_name
+            clientLink(
+              position.client_id,
+              position.client_name
+            )
           ),
           detailField(
             "Location",
-            position.location_name
+            locationLink(
+              position.location_id,
+              position.location_name
+            )
           ),
           detailField(
             "Warehouse",
-            position.warehouse
+            displayValue(position.warehouse)
           ),
           detailField(
             "Installed at",
@@ -431,40 +534,25 @@ export default async function StockDetailPage({
           ),
           detailField(
             "Asset role",
-            position.asset_role
+            displayValue(position.asset_role)
           ),
           detailField(
             "Arrangement",
-            position.asset_arrangement
+            displayValue(
+              position.asset_arrangement
+            )
           ),
-          h(
-            "div",
-            {
-              className:
-                "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
-            },
-            h(
-              "p",
-              {
-                className:
-                  "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
-              },
-              "Installation ID"
-            ),
-            h(
-              "p",
-              {
-                className:
-                  "mt-0.5 break-words text-sm leading-5",
-              },
-              installationLink(
-                position.installation_id
-              )
+          detailField(
+            "Installation ID",
+            installationLink(
+              position.installation_id
             )
           ),
           detailField(
             "Assignment ID",
-            position.installation_asset_id
+            displayValue(
+              position.installation_asset_id
+            )
           )
         )
       )
@@ -520,87 +608,61 @@ export default async function StockDetailPage({
         },
         detailField(
           "Previous lifecycle",
-          event.previous_lifecycle_status
+          displayValue(
+            event.previous_lifecycle_status
+          )
         ),
         detailField(
           "New lifecycle",
-          event.new_lifecycle_status
+          displayValue(event.new_lifecycle_status)
         ),
         detailField(
           "From warehouse",
-          event.from_warehouse
+          displayValue(event.from_warehouse)
         ),
         detailField(
           "To warehouse",
-          event.to_warehouse
+          displayValue(event.to_warehouse)
         ),
-        h(
-          "div",
-          {
-            className:
-              "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
-          },
-          h(
-            "p",
-            {
-              className:
-                "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
-            },
-            "From installation"
-          ),
-          h(
-            "p",
-            {
-              className:
-                "mt-0.5 text-sm leading-5",
-            },
-            installationLink(
-              event.from_installation_id
-            )
-          )
-        ),
-        h(
-          "div",
-          {
-            className:
-              "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
-          },
-          h(
-            "p",
-            {
-              className:
-                "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
-            },
-            "To installation"
-          ),
-          h(
-            "p",
-            {
-              className:
-                "mt-0.5 text-sm leading-5",
-            },
-            installationLink(
-              event.to_installation_id
-            )
+        detailField(
+          "From installation",
+          installationLink(
+            event.from_installation_id
           )
         ),
         detailField(
-          "From client / location",
-          [
-            event.from_client_name,
-            event.from_location_name,
-          ]
-            .filter(Boolean)
-            .join(" / ") || null
+          "To installation",
+          installationLink(
+            event.to_installation_id
+          )
         ),
         detailField(
-          "To client / location",
-          [
-            event.to_client_name,
-            event.to_location_name,
-          ]
-            .filter(Boolean)
-            .join(" / ") || null
+          "From client",
+          clientLink(
+            event.from_client_id,
+            event.from_client_name
+          )
+        ),
+        detailField(
+          "From location",
+          locationLink(
+            event.from_location_id,
+            event.from_location_name
+          )
+        ),
+        detailField(
+          "To client",
+          clientLink(
+            event.to_client_id,
+            event.to_client_name
+          )
+        ),
+        detailField(
+          "To location",
+          locationLink(
+            event.to_location_id,
+            event.to_location_name
+          )
         )
       ),
       event.reason ||
@@ -756,6 +818,7 @@ export default async function StockDetailPage({
             current.lifecycle_status
           )
         ),
+
         h(
           "div",
           {
@@ -772,7 +835,7 @@ export default async function StockDetailPage({
           ),
           detailField(
             "Product code",
-            current.product_code
+            displayValue(current.product_code)
           ),
           detailField(
             "Product category",
@@ -796,42 +859,30 @@ export default async function StockDetailPage({
           ),
           detailField(
             "Warehouse",
-            current.warehouse
+            displayValue(current.warehouse)
           ),
           detailField(
             "Client",
-            current.client_name
+            clientLink(
+              current.client_id,
+              current.client_name
+            )
           ),
           detailField(
             "Location",
-            current.location_name
+            locationLink(
+              current.location_id,
+              current.location_name
+            )
           ),
-          h(
-            "div",
-            {
-              className:
-                "rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5",
-            },
-            h(
-              "p",
-              {
-                className:
-                  "text-[10px] font-semibold uppercase tracking-wide text-slate-500",
-              },
-              "Installation"
-            ),
-            h(
-              "p",
-              {
-                className:
-                  "mt-0.5 text-sm leading-5",
-              },
-              installationLink(
-                current.installation_id
-              )
+          detailField(
+            "Installation",
+            installationLink(
+              current.installation_id
             )
           )
         ),
+
         current.notes
           ? h(
               "div",
@@ -865,28 +916,9 @@ export default async function StockDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Current Position and Assignments"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            positions.length.toLocaleString()
-          )
+        sectionHeader(
+          "Current Position and Assignments",
+          positions.length
         ),
         h(
           "div",
@@ -904,28 +936,9 @@ export default async function StockDetailPage({
           className:
             "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        h(
-          "div",
-          {
-            className:
-              "flex items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white",
-          },
-          h(
-            "h2",
-            {
-              className:
-                "text-lg font-semibold",
-            },
-            "Asset Event History"
-          ),
-          h(
-            "span",
-            {
-              className:
-                "rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-800",
-            },
-            history.length.toLocaleString()
-          )
+        sectionHeader(
+          "Asset Event History",
+          history.length
         ),
         historyError
           ? h(
