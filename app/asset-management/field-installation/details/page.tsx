@@ -698,6 +698,30 @@ export default async function InstallationDetailsPage({
       newLocationNotes
     );
 
+  const assetSelectionParameters = new URLSearchParams({
+    clientId,
+    locationMode,
+    locationId,
+    newLocationName,
+    newLocationType,
+    newRegion,
+    newLatitude: newLatitudeText,
+    newLongitude: newLongitudeText,
+    newLocationNotes,
+    installationStatus,
+    installationDate,
+    installationType,
+    crop,
+    loggerId,
+    loggerType,
+    ftpId,
+    simCard,
+    otherSensors,
+    installationNotes,
+  });
+  const assetSelectionUrl =
+    "/asset-management/field-installation/assets?" +
+    assetSelectionParameters.toString();
   const locationName =
     locationMode === "existing"
       ? selectedLocation?.location_name ??
@@ -1386,13 +1410,10 @@ export default async function InstallationDetailsPage({
                 className:
                   "mt-4 flex flex-wrap gap-2",
               },
-              h(
-                "span",
-                {
-                  className:
-                    "inline-flex cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-600",
-                },
-                "Continue to Asset Selection: Next Stage"
+              navigationButton(
+                assetSelectionUrl,
+                "Continue to Asset Selection",
+                true
               ),
               navigationButton(
                 locationReturnUrl,
