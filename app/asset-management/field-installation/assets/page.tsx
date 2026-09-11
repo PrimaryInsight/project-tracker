@@ -174,6 +174,7 @@ export default async function AssetSelectionPage({ searchParams }: PageProps) {
   const locationType = locationMode === "existing" ? text(location?.location_type) : text(one(params.newLocationType));
   const region = locationMode === "existing" ? text(location?.region) : text(one(params.newRegion));
   const detailsHref = `/asset-management/field-installation/details?${query(params, { q: null, selected: null, detail: null, reviewAssets: null })}`;
+  const confirmationHref = `/asset-management/field-installation/confirmation?${query(params, { q: null, detail: null, reviewAssets: null })}`;
 
   return h("main", { className: page }, h("div", { className: wrap },
     h("nav", { className: "flex flex-wrap gap-2 text-sm" },
@@ -358,7 +359,7 @@ export default async function AssetSelectionPage({ searchParams }: PageProps) {
             h("p", { className: "mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900" }, "Nothing has been saved. Stock remains unchanged and no installation, installation asset or asset event has been created."),
             h("div", { className: "mt-4 flex flex-wrap gap-2" },
               h("a", { href: `/asset-management/field-installation/assets?${query(params, { reviewAssets: null })}#asset-search`, className: button }, "Add or Change Assets"),
-              h("button", { type: "button", disabled: true, className: "inline-flex min-h-11 items-center rounded-lg bg-slate-300 px-4 py-2 text-sm font-bold text-slate-600" }, "Continue to Final Confirmation: Not Enabled")
+              h("a", { href: confirmationHref, className: primary }, "Continue to Final Confirmation")
             )
           )
     ) : null,
