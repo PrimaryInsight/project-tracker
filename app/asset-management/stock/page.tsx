@@ -1,54 +1,37 @@
 import { createElement as h } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import LogoutButton from "@/app/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
-type HomeOption = {
+type StockOption = {
   title: string;
   description: string;
   href: string;
-  colour: "blue" | "emerald" | "amber" | "slate";
+  colour: "blue" | "amber";
   status: string;
 };
 
-const options: HomeOption[] = [
+const options: StockOption[] = [
   {
-    title: "Stock",
+    title: "Receive New Stock",
     description:
-      "Receive new stock or search for existing stock items and their current position.",
-    href: "/asset-management/stock",
+      "Find an existing active product, then enter one or more new stock items for final review before receipt.",
+    href: "/asset-management/stock/receive",
     colour: "blue",
-    status: "Current development phase",
+    status: "Next workflow to build",
   },
   {
-    title: "Field Installation",
+    title: "Search Existing Stock",
     description:
-      "Create a field installation and assign eligible stock items to a client and location.",
-    href: "/asset-management/field-installation",
-    colour: "emerald",
-    status: "Available",
-  },
-  {
-    title: "Search / Find",
-    description:
-      "Find clients, locations, installations, assets and current stock status.",
-    href: "/asset-management/search",
+      "Search existing stock items by stock ID, product, serial number, warehouse or current position.",
+    href: "/asset-management/stock/search",
     colour: "amber",
     status: "Available",
   },
-  {
-    title: "Admin",
-    description:
-      "Manage clients, locations, products, stock, installations and history.",
-    href: "/asset-management/admin",
-    colour: "slate",
-    status: "To be built",
-  },
 ];
 
-function getCardClasses(colour: HomeOption["colour"]) {
+function getCardClasses(colour: StockOption["colour"]) {
   if (colour === "blue") {
     return {
       card: "border-blue-200 bg-blue-50 hover:border-blue-400",
@@ -59,44 +42,23 @@ function getCardClasses(colour: HomeOption["colour"]) {
     };
   }
 
-  if (colour === "emerald") {
-    return {
-      card:
-        "border-emerald-200 bg-emerald-50 hover:border-emerald-400",
-      title: "text-emerald-900",
-      text: "text-emerald-800",
-      button: "bg-emerald-700 text-white group-hover:bg-emerald-800",
-      status: "text-emerald-700",
-    };
-  }
-
-  if (colour === "amber") {
-    return {
-      card: "border-amber-200 bg-amber-50 hover:border-amber-400",
-      title: "text-amber-900",
-      text: "text-amber-800",
-      button: "bg-amber-700 text-white group-hover:bg-amber-800",
-      status: "text-amber-700",
-    };
-  }
-
   return {
-    card: "border-slate-300 bg-slate-50 hover:border-slate-500",
-    title: "text-slate-900",
-    text: "text-slate-700",
-    button: "bg-slate-700 text-white group-hover:bg-slate-800",
-    status: "text-slate-600",
+    card: "border-amber-200 bg-amber-50 hover:border-amber-400",
+    title: "text-amber-900",
+    text: "text-amber-800",
+    button: "bg-amber-700 text-white group-hover:bg-amber-800",
+    status: "text-amber-700",
   };
 }
 
-export default async function AssetManagementHome() {
+export default async function StockHomePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?next=/asset-management");
+    redirect("/login?next=/asset-management/stock");
   }
 
   const cards = options.map((option) => {
@@ -154,7 +116,7 @@ export default async function AssetManagementHome() {
     h(
       "div",
       {
-        className: "mx-auto max-w-6xl",
+        className: "mx-auto max-w-5xl",
       },
       h(
         "header",
@@ -170,7 +132,7 @@ export default async function AssetManagementHome() {
             {
               className: "text-3xl font-bold text-slate-900",
             },
-            "Asset Management"
+            "Stock"
           ),
           h(
             "p",
@@ -184,7 +146,7 @@ export default async function AssetManagementHome() {
             {
               className: "mt-3 max-w-2xl text-slate-700",
             },
-            "Choose the task you want to complete."
+            "Choose whether to receive new stock or search for an existing stock item."
           )
         ),
         h(
@@ -195,13 +157,21 @@ export default async function AssetManagementHome() {
           h(
             "a",
             {
-              href: "/",
+              href: "/asset-management",
               className:
                 "rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50",
             },
-            "Systems Home"
+            "Asset Management Home"
           ),
-          h(LogoutButton)
+          h(
+            "a",
+            {
+              href: "/",
+              className:
+                "rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800",
+            },
+            "Systems Home"
+          )
         )
       ),
       h(
@@ -215,34 +185,21 @@ export default async function AssetManagementHome() {
         "section",
         {
           className:
-            "mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm",
+            "mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-sm",
         },
         h(
-          "div",
-          null,
-          h(
-            "h2",
-            {
-              className: "font-semibold text-slate-900",
-            },
-            "Hardware Database connection"
-          ),
-          h(
-            "p",
-            {
-              className: "mt-1 text-sm text-slate-600",
-            },
-            "Use the connection test to confirm the current production totals."
-          )
+          "h2",
+          {
+            className: "font-semibold",
+          },
+          "Navigation-only stage"
         ),
         h(
-          "a",
+          "p",
           {
-            href: "/asset-management/connection-test",
-            className:
-              "rounded-lg bg-slate-700 px-4 py-2 font-semibold text-white hover:bg-slate-800",
+            className: "mt-1 text-sm",
           },
-          "Open Connection Test"
+          "This Stock landing page does not create, edit or remove Hardware Database records."
         )
       )
     )
