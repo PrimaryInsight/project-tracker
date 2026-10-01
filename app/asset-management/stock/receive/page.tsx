@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import { createElement as h } from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 import { createHardwareClient } from "@/lib/hardware-supabase";
+import { confirmPreviewStockReceipt } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,7 @@ const card = "mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:
 const button = "inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 hover:bg-slate-50";
 const primary = "inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800";
 const WAREHOUSES = ["Canterbury", "Otago"] as const;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function one(value: Value) {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
@@ -40,6 +43,15 @@ function one(value: Value) {
 
 function text(value: string | null | undefined, fallback = "Not recorded") {
   return value === null || value === undefined || value === "" ? fallback : value;
+}
+
+function localToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Pacific/Auckland",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 function productName(product: Product | null) {
@@ -89,6 +101,9 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
     ? requestedWarehouse
     : "";
   const reviewRequested = one(params.review) === "1";
+  const requestedIdempotencyKey = one(params.idempotencyKey).trim();
+  const idempotencyKey = UUID.test(requestedIdempotencyKey) ? requestedIdempotencyKey : "";
+  const dateReceived = localToday();
 
   const tracker = await createProjectTrackerClient();
   const { data: { user } } = await tracker.auth.getUser();
@@ -203,6 +218,18 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
     && Boolean(selectedWarehouse)
     && !exactDuplicate;
 
+  if (finalReview && selectedProduct && !idempotencyKey) {
+    redirect(receiveUrl({
+      serial,
+      checked: "1",
+      productSearch: productSearch || null,
+      productId: selectedProduct.product_id,
+      warehouse: selectedWarehouse,
+      review: "1",
+      idempotencyKey: randomUUID(),
+    }));
+  }
+
   if (finalReview && selectedProduct) {
     return h("main", { className: page }, h("div", { className: wrap },
       h("nav", { className: "flex flex-wrap gap-2 text-sm" },
@@ -233,23 +260,44 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
             h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, selectedWarehouse)
           ),
           h("div", { className: "rounded-lg bg-slate-50 p-4" },
-            h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "New stock status"),
-            h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, "In Stock / Active")
+            h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "Lifecycle status"),
+            h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, "In Stock")
+          ),
+          h("div", { className: "rounded-lg bg-slate-50 p-4" },
+            h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "Classification"),
+            h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, "Company Owned")
+          ),
+          h("div", { className: "rounded-lg bg-slate-50 p-4" },
+            h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "Operational status"),
+            h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, "Active")
           )
         ),
         differentMatches.length > 0 ? h("div", { className: "mt-5 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-950" },
           h("p", { className: "font-bold" }, "Serial number warning"),
           h("p", { className: "mt-1 text-sm" }, "This serial number is already used by a different controlled product type. The selected physical item is different, so receipt may continue after the item is checked.")
         ) : null,
+        h("div", { className: "mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950" },
+          h("p", { className: "font-bold" }, "Submission protection ready"),
+          h("p", { className: "mt-1 text-sm" }, "A secure receipt reference has been prepared for this draft and will remain stable through refresh and Back / Edit. The protected server action is connected, but Confirm Receipt remains disabled and no database write has occurred.")
+        ),
         h("div", { className: "mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between" },
           h("a", {
-            href: `${receiveUrl({ serial, checked: "1", productSearch: productSearch || null, productId: selectedProduct.product_id, warehouse: selectedWarehouse })}#selected-product`,
+            href: `${receiveUrl({ serial, checked: "1", productSearch: productSearch || null, productId: selectedProduct.product_id, warehouse: selectedWarehouse, idempotencyKey })}#selected-product`,
             className: button
           }, "Back / Edit"),
-          h("span", {
-            className: "inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-4 py-2 text-sm font-bold text-slate-600",
-            "aria-disabled": "true"
-          }, "Confirm Receipt - Next step")
+          h("form", { action: confirmPreviewStockReceipt },
+            h("input", { type: "hidden", name: "serial", value: serial }),
+            h("input", { type: "hidden", name: "productId", value: selectedProduct.product_id }),
+            h("input", { type: "hidden", name: "warehouse", value: selectedWarehouse }),
+            h("input", { type: "hidden", name: "dateReceived", value: dateReceived }),
+            h("input", { type: "hidden", name: "idempotencyKey", value: idempotencyKey }),
+            h("button", {
+              type: "submit",
+              disabled: true,
+              className: "inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-4 py-2 text-sm font-bold text-slate-600",
+              "aria-disabled": "true"
+            }, "Confirm Receipt - Next step")
+          )
         )
       ),
       h("footer", { className: "mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900" },
@@ -283,6 +331,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
         h("a", { href: "/asset-management/stock", className: button }, "Back to Stock")
       ),
       h("form", { method: "get", className: "mt-4 grid gap-3 sm:grid-cols-[1fr_auto]" },
+        idempotencyKey ? h("input", { type: "hidden", name: "idempotencyKey", value: idempotencyKey }) : null,
         h("input", { type: "hidden", name: "checked", value: "1" }),
         h("input", { name: "serial", type: "search", defaultValue: serial, required: true, autoFocus: !checked, autoComplete: "off", placeholder: "Scan or enter serial number...", className: "min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base" }),
         h("button", { type: "submit", className: primary }, "Check Serial Number")
@@ -323,12 +372,13 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
       h("h2", { className: "mt-1 text-xl font-bold" }, "Select controlled product type"),
       h("p", { className: "mt-1 text-sm text-slate-600" }, "Search by the physical description on the item. Try LRR, 30, SDI, moisture, Bluetooth or Harvest."),
       h("form", { method: "get", className: "mt-4 grid gap-3 sm:grid-cols-[1fr_auto]" },
+        idempotencyKey ? h("input", { type: "hidden", name: "idempotencyKey", value: idempotencyKey }) : null,
         h("input", { type: "hidden", name: "serial", value: serial }),
         h("input", { type: "hidden", name: "checked", value: "1" }),
         h("input", { name: "productSearch", type: "search", defaultValue: productSearch, minLength: 2, autoComplete: "off", placeholder: "Example: LRR, 30, SDI 60 or Harvest...", className: "min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base" }),
         h("button", { type: "submit", className: primary }, "Search Products")
       ),
-      productSearch ? h("a", { href: receiveUrl({ serial, checked: "1" }), className: `${button} mt-3` }, "Clear Product Search") : null
+      productSearch ? h("a", { href: receiveUrl({ serial, checked: "1", idempotencyKey: idempotencyKey || null }), className: `${button} mt-3` }, "Clear Product Search") : null
     ) : null,
 
     productError ? h("section", { className: "mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" },
@@ -354,12 +404,13 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
         h("p", { className: "font-semibold text-emerald-950" }, differentMatches.length > 0 ? "Different product type confirmed" : "Product and serial combination is available"),
         h("p", { className: "mt-1 text-sm text-slate-700" }, differentMatches.length > 0 ? "The serial is used by another product type, but the selected product type is different. Receipt may continue and this warning will remain visible at Final Review." : "No existing item has this product type and serial-number combination.")
       ),
-      h("a", { href: receiveUrl({ serial, checked: "1", productSearch: productSearch || null }), className: `${button} mt-4` }, "Change Product"),
+      h("a", { href: receiveUrl({ serial, checked: "1", productSearch: productSearch || null, idempotencyKey: idempotencyKey || null }), className: `${button} mt-4` }, "Change Product"),
       !exactDuplicate ? h("section", { className: "mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4" },
         h("p", { className: "text-xs font-bold uppercase tracking-wide text-blue-700" }, "Step 3"),
         h("h3", { className: "mt-1 text-xl font-bold text-slate-900" }, "Select receiving warehouse"),
         h("p", { className: "mt-1 text-sm text-slate-700" }, "Choose where the physical item will be held and available as stock."),
         h("form", { method: "get", className: "mt-4 grid gap-3 sm:grid-cols-[1fr_auto]" },
+        idempotencyKey ? h("input", { type: "hidden", name: "idempotencyKey", value: idempotencyKey }) : null,
           h("input", { type: "hidden", name: "serial", value: serial }),
           h("input", { type: "hidden", name: "checked", value: "1" }),
           h("input", { type: "hidden", name: "productSearch", value: productSearch }),
@@ -375,6 +426,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
           h("div", { className: "mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2" },
             h("p", null, `Warehouse: ${selectedWarehouse}`),
             h("p", null, "Lifecycle status: In Stock"),
+            h("p", null, "Classification: Company Owned"),
             h("p", null, "Operational status: Active"),
             h("p", null, "Current position: Selected warehouse")
           ),
@@ -388,6 +440,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
               productId: selectedProduct.product_id,
               warehouse: selectedWarehouse,
               review: "1",
+              idempotencyKey: idempotencyKey || null,
             }),
             className: `${primary} mt-3`
           }, "Continue to Final Review")
@@ -411,7 +464,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
                 h("h3", { className: "font-semibold" }, productName(product))
               ),
               selected ? h("span", { className: "inline-flex min-h-11 items-center rounded-lg bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800" }, "Selected")
-              : h("a", { href: `${receiveUrl({ serial, checked: "1", productSearch, productId: product.product_id })}#selected-product`, className: primary }, "Select Product")
+              : h("a", { href: `${receiveUrl({ serial, checked: "1", productSearch, productId: product.product_id, idempotencyKey: idempotencyKey || null })}#selected-product`, className: primary }, "Select Product")
             )
           );
         }))
