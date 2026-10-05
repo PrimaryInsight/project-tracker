@@ -1,7 +1,7 @@
 import { createElement as h } from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -120,7 +120,7 @@ export default async function StockSearchPage({
   let searchError = "";
 
   if (safeSearchText.length >= 2) {
-    const hardware = createHardwareClient();
+    const hardware = createHardwareProductionClient();
     const pattern = `%${safeSearchText}%`;
 
     const response = await hardware

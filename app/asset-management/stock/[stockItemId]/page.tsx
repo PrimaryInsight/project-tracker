@@ -4,7 +4,7 @@ import {
 } from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -357,7 +357,7 @@ export default async function StockDetailPage({
     );
   }
 
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
 
   const [
     positionResponse,
@@ -931,55 +931,72 @@ export default async function StockDetailPage({
       ),
 
       h(
-        "section",
+        "details",
         {
           className:
-            "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
+            "group mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
         },
-        sectionHeader(
-          "Asset Event History",
-          history.length
-        ),
-        historyError
-          ? h(
+        h(
+          "summary",
+          {
+            className:
+              "flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 bg-slate-800 px-4 py-3 text-white marker:hidden [&::-webkit-details-marker]:hidden",
+          },
+          h(
+            "div",
+            { className: "min-w-0" },
+            h(
               "p",
-              {
-                className:
-                  "p-4 text-sm text-red-700",
-              },
-              `History could not be loaded: ${historyError}`
+              { className: "text-base font-bold sm:text-lg" },
+              "Asset Event History"
+            ),
+            h(
+              "p",
+              { className: "mt-0.5 text-xs text-slate-300" },
+              history.length === 1
+                ? "1 event - tap to show"
+                : `${history.length} events - tap to show`
             )
-          : history.length === 0
+          ),
+          h(
+            "span",
+            {
+              className:
+                "shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-900",
+            },
+            history.length
+          )
+        ),
+        h(
+          "div",
+          { className: "border-t border-slate-200" },
+          historyError
             ? h(
-                "div",
-                {
-                  className: "p-4",
-                },
-                h(
-                  "p",
-                  {
-                    className:
-                      "text-sm font-medium text-slate-800",
-                  },
-                  "No post-go-live asset events have been recorded."
-                ),
-                h(
-                  "p",
-                  {
-                    className:
-                      "mt-1 text-xs text-slate-600",
-                  },
-                  "Legacy asset history remains in the existing business spreadsheet."
+                "p",
+                { className: "p-4 text-sm text-red-700" },
+                `History could not be loaded: ${historyError}`
+              )
+            : history.length === 0
+              ? h(
+                  "div",
+                  { className: "p-4" },
+                  h(
+                    "p",
+                    { className: "text-sm font-medium text-slate-800" },
+                    "No post-go-live asset events have been recorded."
+                  ),
+                  h(
+                    "p",
+                    { className: "mt-1 text-xs text-slate-600" },
+                    "Legacy asset history remains in the existing business spreadsheet."
+                  )
                 )
-              )
-            : h(
-                "div",
-                {
-                  className:
-                    "divide-y divide-slate-200",
-                },
-                ...historyCards
-              )
+              : h(
+                  "div",
+                  { className: "divide-y divide-slate-200" },
+                  ...historyCards
+                )
+        )
       ),
 
       h(

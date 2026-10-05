@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { createElement as h } from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
-import { confirmPreviewStockReceipt } from "./actions";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
+import { confirmProductionStockReceipt } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -125,7 +125,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
     ));
   }
 
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   let matches: Match[] = [];
   let serialError = "";
   let products: Product[] = [];
@@ -239,7 +239,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
         h("span", null, "/ Receive New Stock / Final Review")
       ),
       h("header", { className: "mt-4 rounded-xl bg-slate-800 p-5 text-white" },
-        h("p", { className: "text-xs font-bold uppercase tracking-wider text-slate-300" }, "Read-only prototype"),
+        h("p", { className: "text-xs font-bold uppercase tracking-wider text-slate-300" }, "Hardware Production"),
         h("h1", { className: "mt-1 text-2xl font-bold sm:text-3xl" }, "Final Review"),
         h("p", { className: "mt-2 text-sm text-slate-200" }, "Check the physical item, serial number and receiving warehouse before confirmation.")
       ),
@@ -285,7 +285,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
             href: `${receiveUrl({ serial, checked: "1", productSearch: productSearch || null, productId: selectedProduct.product_id, warehouse: selectedWarehouse, idempotencyKey })}#selected-product`,
             className: button
           }, "Back / Edit"),
-          h("form", { action: confirmPreviewStockReceipt },
+          h("form", { action: confirmProductionStockReceipt },
             h("input", { type: "hidden", name: "serial", value: serial }),
             h("input", { type: "hidden", name: "productId", value: selectedProduct.product_id }),
             h("input", { type: "hidden", name: "warehouse", value: selectedWarehouse }),
@@ -316,7 +316,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
     ),
 
     h("header", { className: "mt-4 rounded-xl bg-slate-800 p-5 text-white" },
-      h("p", { className: "text-xs font-bold uppercase tracking-wider text-slate-300" }, "Read-only prototype"),
+      h("p", { className: "text-xs font-bold uppercase tracking-wider text-slate-300" }, "Hardware Production"),
       h("h1", { className: "mt-1 text-2xl font-bold sm:text-3xl" }, "Receive New Stock"),
       h("p", { className: "mt-2 text-sm text-slate-200" }, "Enter the physical item's serial, then select its controlled product type from the Xero-aligned catalogue.")
     ),
@@ -471,7 +471,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
     ) : null,
 
     h("footer", { className: "mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900" },
-      h("p", { className: "font-semibold" }, "Read-only prototype"),
+      h("p", { className: "font-semibold" }, "Hardware Production"),
       h("p", { className: "mt-0.5" }, "This page performs SELECT queries only. It does not create product types, stock items, receipts or stock events.")
     )
   ));
