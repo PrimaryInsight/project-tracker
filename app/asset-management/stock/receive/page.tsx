@@ -103,7 +103,12 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
   const reviewRequested = one(params.review) === "1";
   const requestedIdempotencyKey = one(params.idempotencyKey).trim();
   const idempotencyKey = UUID.test(requestedIdempotencyKey) ? requestedIdempotencyKey : "";
-  const dateReceived = localToday();
+  const requestedDateReceived = one(params.dateReceived).trim();
+  const today = localToday();
+  const dateReceived = /^\d{4}-\d{2}-\d{2}$/.test(requestedDateReceived)
+    && requestedDateReceived <= today
+    ? requestedDateReceived
+    : "";
 
   const tracker = await createProjectTrackerClient();
   const { data: { user } } = await tracker.auth.getUser();
@@ -216,6 +221,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
     && serialChecked
     && Boolean(selectedProduct)
     && Boolean(selectedWarehouse)
+    && Boolean(dateReceived)
     && !exactDuplicate;
 
   if (finalReview && selectedProduct && !idempotencyKey) {
@@ -225,6 +231,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
       productSearch: productSearch || null,
       productId: selectedProduct.product_id,
       warehouse: selectedWarehouse,
+      dateReceived,
       review: "1",
       idempotencyKey: randomUUID(),
     }));
@@ -241,7 +248,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
       h("header", { className: "mt-4 rounded-xl bg-slate-800 p-5 text-white" },
         h("p", { className: "text-xs font-bold uppercase tracking-wider text-slate-300" }, "Hardware Production"),
         h("h1", { className: "mt-1 text-2xl font-bold sm:text-3xl" }, "Final Review"),
-        h("p", { className: "mt-2 text-sm text-slate-200" }, "Check the physical item, serial number and receiving warehouse before confirmation.")
+        h("p", { className: "mt-2 text-sm text-slate-200" }, "Check the physical item, serial number, receiving warehouse and date received before confirmation.")
       ),
       h("section", { className: card },
         h("p", { className: "text-xs font-bold uppercase tracking-wide text-blue-700" }, "Receive New Stock"),
@@ -258,6 +265,10 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
           h("div", { className: "rounded-lg bg-slate-50 p-4" },
             h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "Receiving warehouse"),
             h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, selectedWarehouse)
+          ),
+          h("div", { className: "rounded-lg bg-slate-50 p-4" },
+            h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "Date received"),
+            h("dd", { className: "mt-1 text-lg font-bold text-slate-900" }, dateReceived)
           ),
           h("div", { className: "rounded-lg bg-slate-50 p-4" },
             h("dt", { className: "text-xs font-bold uppercase tracking-wide text-slate-500" }, "Lifecycle status"),
@@ -278,11 +289,11 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
         ) : null,
         h("div", { className: "mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950" },
           h("p", { className: "font-bold" }, "Submission protection ready"),
-          h("p", { className: "mt-1 text-sm" }, "A secure receipt reference has been prepared for this draft and will remain stable through refresh and Back / Edit. The protected server action is connected, but Confirm Receipt remains disabled and no database write has occurred.")
+          h("p", { className: "mt-1 text-sm" }, "A secure receipt reference has been prepared for this draft and will remain stable through refresh and Back / Edit. Confirm Receipt will submit this reviewed item to Hardware Production using the protected server action.")
         ),
         h("div", { className: "mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between" },
           h("a", {
-            href: `${receiveUrl({ serial, checked: "1", productSearch: productSearch || null, productId: selectedProduct.product_id, warehouse: selectedWarehouse, idempotencyKey })}#selected-product`,
+            href: `${receiveUrl({ serial, checked: "1", productSearch: productSearch || null, productId: selectedProduct.product_id, warehouse: selectedWarehouse, dateReceived, idempotencyKey })}#selected-product`,
             className: button
           }, "Back / Edit"),
           h("form", { action: confirmProductionStockReceipt },
@@ -293,16 +304,14 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
             h("input", { type: "hidden", name: "idempotencyKey", value: idempotencyKey }),
             h("button", {
               type: "submit",
-              disabled: true,
-              className: "inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-4 py-2 text-sm font-bold text-slate-600",
-              "aria-disabled": "true"
-            }, "Confirm Receipt - Next step")
+              className: primary
+            }, "Confirm Receipt")
           )
         )
       ),
       h("footer", { className: "mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900" },
-        h("p", { className: "font-semibold" }, "Read-only Final Review"),
-        h("p", { className: "mt-0.5" }, "No stock item, receipt or stock event has been created. Confirm Receipt remains disabled until the controlled write stage is implemented and tested.")
+        h("p", { className: "font-semibold" }, "Production receipt ready"),
+        h("p", { className: "mt-0.5" }, "No stock item or receipt event has been created yet. Check the item details carefully, then use Confirm Receipt once only.")
       )
     ));
   }
@@ -407,9 +416,9 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
       h("a", { href: receiveUrl({ serial, checked: "1", productSearch: productSearch || null, idempotencyKey: idempotencyKey || null }), className: `${button} mt-4` }, "Change Product"),
       !exactDuplicate ? h("section", { className: "mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4" },
         h("p", { className: "text-xs font-bold uppercase tracking-wide text-blue-700" }, "Step 3"),
-        h("h3", { className: "mt-1 text-xl font-bold text-slate-900" }, "Select receiving warehouse"),
-        h("p", { className: "mt-1 text-sm text-slate-700" }, "Choose where the physical item will be held and available as stock."),
-        h("form", { method: "get", className: "mt-4 grid gap-3 sm:grid-cols-[1fr_auto]" },
+        h("h3", { className: "mt-1 text-xl font-bold text-slate-900" }, "Confirm warehouse and received date"),
+        h("p", { className: "mt-1 text-sm text-slate-700" }, "Choose where the physical item will be held and enter the actual date it was received."),
+        h("form", { method: "get", className: "mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]" },
         idempotencyKey ? h("input", { type: "hidden", name: "idempotencyKey", value: idempotencyKey }) : null,
           h("input", { type: "hidden", name: "serial", value: serial }),
           h("input", { type: "hidden", name: "checked", value: "1" }),
@@ -419,19 +428,29 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
             h("option", { value: "", disabled: true }, "Select warehouse"),
             ...WAREHOUSES.map((warehouse) => h("option", { key: warehouse, value: warehouse }, warehouse))
           ),
-          h("button", { type: "submit", className: primary }, "Confirm Warehouse")
+          h("input", {
+            name: "dateReceived",
+            type: "date",
+            required: true,
+            max: today,
+            defaultValue: dateReceived,
+            className: "min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base",
+            "aria-label": "Date received"
+          }),
+          h("button", { type: "submit", className: primary }, "Confirm Warehouse & Date")
         ),
-        selectedWarehouse ? h("div", { className: "mt-4 rounded-lg border border-emerald-300 bg-white p-4" },
-          h("p", { className: "font-semibold text-emerald-950" }, "Warehouse details ready"),
+        selectedWarehouse && dateReceived ? h("div", { className: "mt-4 rounded-lg border border-emerald-300 bg-white p-4" },
+          h("p", { className: "font-semibold text-emerald-950" }, "Warehouse and received date ready"),
           h("div", { className: "mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2" },
             h("p", null, `Warehouse: ${selectedWarehouse}`),
+            h("p", null, `Date received: ${dateReceived}`),
             h("p", null, "Lifecycle status: In Stock"),
             h("p", null, "Classification: Company Owned"),
             h("p", null, "Operational status: Active"),
             h("p", null, "Current position: Selected warehouse")
           ),
           differentMatches.length > 0 ? h("p", { className: "mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900" }, "Warning retained: this serial is already used by a different controlled product type.") : null,
-          h("p", { className: "mt-3 text-sm text-slate-600" }, "Continue to the single read-only Final Review. No stock item has been created."),
+          h("p", { className: "mt-3 text-sm text-slate-600" }, "Continue to the single Final Review. No stock item has been created yet."),
           h("a", {
             href: receiveUrl({
               serial,
@@ -439,6 +458,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
               productSearch: productSearch || null,
               productId: selectedProduct.product_id,
               warehouse: selectedWarehouse,
+              dateReceived,
               review: "1",
               idempotencyKey: idempotencyKey || null,
             }),
@@ -472,7 +492,7 @@ export default async function ReceiveStockPage({ searchParams }: PageProps) {
 
     h("footer", { className: "mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900" },
       h("p", { className: "font-semibold" }, "Hardware Production"),
-      h("p", { className: "mt-0.5" }, "This page performs SELECT queries only. It does not create product types, stock items, receipts or stock events.")
+      h("p", { className: "mt-0.5" }, "Serial, product and duplicate checks use Hardware Production. A stock item is created only after Final Review and a deliberate Confirm Receipt submission.")
     )
   ));
 }

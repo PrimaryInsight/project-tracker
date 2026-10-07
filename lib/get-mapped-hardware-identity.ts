@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHardwareClient } from "./hardware-supabase";
+import { createHardwareProductionClient } from "./hardware-production-supabase";
 
 export type ControlledAuthTestResult = {
   projectTrackerSessionPresent: boolean;
@@ -38,7 +38,7 @@ export async function resolveMappedHardwareIdentity(
     throw new Error("The signed-in Project Tracker identity is incomplete.");
   }
 
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const { data: mappings, error } = await hardware
     .from("external_staff_identity_map")
     .select("external_user_id, external_email, hardware_user_id, identity_source")
@@ -50,7 +50,7 @@ export async function resolveMappedHardwareIdentity(
 
   if (error) {
     console.error("Mapped identity resolver: mapping lookup failed", { code: error.code });
-    throw new Error("The preview identity mapping could not be verified.");
+    throw new Error("The Production identity mapping could not be verified.");
   }
   if (!mappings || mappings.length !== 1) {
     throw new Error("Exactly one active Project Tracker identity mapping is required.");
@@ -121,7 +121,7 @@ export async function runControlledAuthTest(
       hardwareAuthUserExists: true,
       activeHardwareAdministrator: true,
       overallPassed: true,
-      safeMessage: "The Project Tracker identity was safely recognised by the Hardware Database preview bridge.",
+      safeMessage: "The Project Tracker identity was safely recognised by the Hardware Database Production bridge.",
     };
   } catch (error) {
     console.error("Controlled auth test failed safely", {
