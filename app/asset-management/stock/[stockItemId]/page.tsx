@@ -449,261 +449,132 @@ export default async function StockDetailPage({
   }
 
   const current = positions[0];
-
-  const positionCards = positions.map(
-    (position, index) =>
-      h(
+  const meaningfulPositions = positions.filter(
+    (position) =>
+      Boolean(position.installation_id) ||
+      Boolean(position.installation_asset_id) ||
+      Boolean(position.client_id) ||
+      Boolean(position.location_id) ||
+      Boolean(position.asset_role) ||
+      Boolean(position.asset_arrangement) ||
+      Boolean(position.installed_at)
+  );
+  const positionCards = meaningfulPositions.map(
+    (position, index) => {
+      const fields: ReactNode[] = [];
+      if (position.client_id && position.client_name) {
+        fields.push(detailField("Client", clientLink(position.client_id, position.client_name)));
+      }
+      if (position.location_id && position.location_name) {
+        fields.push(detailField("Location", locationLink(position.location_id, position.location_name)));
+      }
+      if (position.installed_at) {
+        fields.push(detailField("Installed at", formatDate(position.installed_at)));
+      }
+      if (position.asset_role) {
+        fields.push(detailField("Asset role", position.asset_role));
+      }
+      if (position.asset_arrangement) {
+        fields.push(detailField("Arrangement", position.asset_arrangement));
+      }
+      if (position.installation_id) {
+        fields.push(detailField("Installation", installationLink(position.installation_id)));
+      }
+      return h(
         "article",
         {
-          key:
-            position.installation_asset_id ??
-            `${position.stock_item_id}-${index}`,
+          key: position.installation_asset_id ?? `${position.stock_item_id}-${index}`,
           className: "px-4 py-3",
         },
         h(
           "div",
-          {
-            className:
-              "flex flex-wrap items-start justify-between gap-3",
-          },
+          { className: "flex flex-wrap items-start justify-between gap-3" },
           h(
             "div",
             null,
-            h(
-              "h3",
-              {
-                className:
-                  "text-base font-bold text-slate-900",
-              },
-              position.current_position
-            ),
-            h(
-              "p",
-              {
-                className:
-                  "mt-0.5 text-xs text-slate-500",
-              },
-              position.installation_id
-                ? h(
-                    "span",
-                    null,
-                    "Installation ",
-                    installationLink(
-                      position.installation_id
-                    )
-                  )
-                : "Not currently assigned to an installation"
-            )
+            h("h3", { className: "text-base font-bold text-slate-900" }, position.current_position),
+            position.installation_id
+              ? h("p", { className: "mt-0.5 text-xs text-slate-500" }, "Current installation assignment")
+              : null
           ),
           h(
             "span",
-            {
-              className:
-                "rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900",
-            },
+            { className: "rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900" },
             position.lifecycle_status
           )
         ),
-        h(
-          "div",
-          {
-            className:
-              "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
-          },
-          detailField(
-            "Client",
-            clientLink(
-              position.client_id,
-              position.client_name
-            )
-          ),
-          detailField(
-            "Location",
-            locationLink(
-              position.location_id,
-              position.location_name
-            )
-          ),
-          detailField(
-            "Warehouse",
-            displayValue(position.warehouse)
-          ),
-          detailField(
-            "Installed at",
-            formatDate(position.installed_at)
-          ),
-          detailField(
-            "Asset role",
-            displayValue(position.asset_role)
-          ),
-          detailField(
-            "Arrangement",
-            displayValue(
-              position.asset_arrangement
-            )
-          ),
-          detailField(
-            "Installation ID",
-            installationLink(
-              position.installation_id
-            )
-          ),
-          detailField(
-            "Assignment ID",
-            displayValue(
-              position.installation_asset_id
-            )
-          )
-        )
-      )
+        fields.length > 0
+          ? h("div", { className: "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" }, ...fields)
+          : null
+      );
+    }
   );
-
-  const historyCards = history.map((event) =>
-    h(
+  const historyCards = history.map((event) => {
+    const fields: ReactNode[] = [];
+    if (event.previous_lifecycle_status) {
+      fields.push(detailField("Previous lifecycle", event.previous_lifecycle_status));
+    }
+    if (event.new_lifecycle_status) {
+      fields.push(detailField("New lifecycle", event.new_lifecycle_status));
+    }
+    if (event.from_warehouse) {
+      fields.push(detailField("From warehouse", event.from_warehouse));
+    }
+    if (event.to_warehouse) {
+      fields.push(detailField("To warehouse", event.to_warehouse));
+    }
+    if (event.from_installation_id) {
+      fields.push(detailField("From installation", installationLink(event.from_installation_id)));
+    }
+    if (event.to_installation_id) {
+      fields.push(detailField("To installation", installationLink(event.to_installation_id)));
+    }
+    if (event.from_client_id && event.from_client_name) {
+      fields.push(detailField("From client", clientLink(event.from_client_id, event.from_client_name)));
+    }
+    if (event.from_location_id && event.from_location_name) {
+      fields.push(detailField("From location", locationLink(event.from_location_id, event.from_location_name)));
+    }
+    if (event.to_client_id && event.to_client_name) {
+      fields.push(detailField("To client", clientLink(event.to_client_id, event.to_client_name)));
+    }
+    if (event.to_location_id && event.to_location_name) {
+      fields.push(detailField("To location", locationLink(event.to_location_id, event.to_location_name)));
+    }
+    return h(
       "article",
-      {
-        key: event.asset_event_id,
-        className: "px-4 py-3",
-      },
+      { key: event.asset_event_id, className: "px-4 py-3" },
       h(
         "div",
-        {
-          className:
-            "flex flex-wrap items-start justify-between gap-3",
-        },
+        { className: "flex flex-wrap items-start justify-between gap-3" },
         h(
           "div",
           null,
-          h(
-            "h3",
-            {
-              className:
-                "text-base font-bold text-slate-900",
-            },
-            event.event_type
-          ),
-          h(
-            "p",
-            {
-              className:
-                "mt-0.5 text-xs text-slate-500",
-            },
-            formatDateTime(event.event_date)
-          )
+          h("h3", { className: "text-base font-bold text-slate-900" }, event.event_type),
+          h("p", { className: "mt-0.5 text-xs text-slate-500" }, formatDateTime(event.event_date))
         ),
         h(
           "span",
-          {
-            className:
-              "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800",
-          },
+          { className: "rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800" },
           event.source
         )
       ),
-      h(
-        "div",
-        {
-          className:
-            "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
-        },
-        detailField(
-          "Previous lifecycle",
-          displayValue(
-            event.previous_lifecycle_status
-          )
-        ),
-        detailField(
-          "New lifecycle",
-          displayValue(event.new_lifecycle_status)
-        ),
-        detailField(
-          "From warehouse",
-          displayValue(event.from_warehouse)
-        ),
-        detailField(
-          "To warehouse",
-          displayValue(event.to_warehouse)
-        ),
-        detailField(
-          "From installation",
-          installationLink(
-            event.from_installation_id
-          )
-        ),
-        detailField(
-          "To installation",
-          installationLink(
-            event.to_installation_id
-          )
-        ),
-        detailField(
-          "From client",
-          clientLink(
-            event.from_client_id,
-            event.from_client_name
-          )
-        ),
-        detailField(
-          "From location",
-          locationLink(
-            event.from_location_id,
-            event.from_location_name
-          )
-        ),
-        detailField(
-          "To client",
-          clientLink(
-            event.to_client_id,
-            event.to_client_name
-          )
-        ),
-        detailField(
-          "To location",
-          locationLink(
-            event.to_location_id,
-            event.to_location_name
-          )
-        )
-      ),
-      event.reason ||
-        event.notes ||
-        event.created_by_name
+      fields.length > 0
+        ? h("div", { className: "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" }, ...fields)
+        : null,
+      event.reason || event.notes || event.created_by_name
         ? h(
             "div",
-            {
-              className:
-                "mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700",
-            },
-            h(
-              "p",
-              null,
-              `Reason: ${displayValue(
-                event.reason
-              )}`
-            ),
-            h(
-              "p",
-              {
-                className: "mt-0.5",
-              },
-              `Notes: ${displayValue(
-                event.notes
-              )}`
-            ),
-            h(
-              "p",
-              {
-                className: "mt-0.5",
-              },
-              `Recorded by: ${displayValue(
-                event.created_by_name
-              )}`
-            )
+            { className: "mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" },
+            event.reason ? h("p", null, `Reason: ${event.reason}`) : null,
+            event.notes ? h("p", { className: event.reason ? "mt-0.5" : "" }, `Notes: ${event.notes}`) : null,
+            event.created_by_name
+              ? h("p", { className: event.reason || event.notes ? "mt-0.5" : "" }, `Recorded by: ${event.created_by_name}`)
+              : null
           )
         : null
-    )
-  );
-
+    );
+  });
   return h(
     "main",
     {
@@ -800,14 +671,9 @@ export default async function StockDetailPage({
               },
               "Current stock record"
             ),
-            h(
-              "p",
-              {
-                className:
-                  "mt-0.5 text-sm text-slate-600",
-              },
-              current.current_position
-            )
+            current.current_position && current.current_position !== current.warehouse
+              ? h("p", { className: "mt-0.5 text-sm text-slate-600" }, current.current_position)
+              : null
           ),
           h(
             "span",
@@ -821,68 +687,13 @@ export default async function StockDetailPage({
 
         h(
           "div",
-          {
-            className:
-              "mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6",
-          },
-          detailField(
-            "Stock item ID",
-            current.stock_item_id
-          ),
-          detailField(
-            "Product ID",
-            current.product_id
-          ),
-          detailField(
-            "Product code",
-            displayValue(current.product_code)
-          ),
-          detailField(
-            "Product category",
-            current.product_category
-          ),
-          detailField(
-            "Product serial",
-            current.product_serial
-          ),
-          detailField(
-            "Lifecycle",
-            current.lifecycle_status
-          ),
-          detailField(
-            "Classification",
-            current.asset_classification
-          ),
-          detailField(
-            "Record status",
-            current.status
-          ),
-          detailField(
-            "Warehouse",
-            displayValue(current.warehouse)
-          ),
-          detailField(
-            "Client",
-            clientLink(
-              current.client_id,
-              current.client_name
-            )
-          ),
-          detailField(
-            "Location",
-            locationLink(
-              current.location_id,
-              current.location_name
-            )
-          ),
-          detailField(
-            "Installation",
-            installationLink(
-              current.installation_id
-            )
-          )
+          { className: "mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" },
+          detailField("Serial", current.product_serial),
+          current.warehouse ? detailField("Warehouse", current.warehouse) : null,
+          current.product_code ? detailField("Product code", current.product_code) : null,
+          detailField("Classification", current.asset_classification),
+          detailField("Status", current.status)
         ),
-
         current.notes
           ? h(
               "div",
@@ -910,26 +721,14 @@ export default async function StockDetailPage({
           : null
       ),
 
-      h(
-        "section",
-        {
-          className:
-            "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
-        },
-        sectionHeader(
-          "Current Position and Assignments",
-          positions.length
-        ),
-        h(
-          "div",
-          {
-            className:
-              "divide-y divide-slate-200",
-          },
-          ...positionCards
-        )
-      ),
-
+      meaningfulPositions.length > 0
+        ? h(
+            "section",
+            { className: "mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm" },
+            sectionHeader("Current Position and Assignments", meaningfulPositions.length),
+            h("div", { className: "divide-y divide-slate-200" }, ...positionCards)
+          )
+        : null,
       h(
         "details",
         {
