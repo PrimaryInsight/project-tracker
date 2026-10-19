@@ -246,7 +246,10 @@ function locationLink(
   );
 }
 
-function stockLink(stockItemId: string) {
+function stockLink(
+  stockItemId: string,
+  label: ReactNode
+) {
   return h(
     "a",
     {
@@ -256,7 +259,7 @@ function stockLink(stockItemId: string) {
       className:
         "font-semibold text-amber-800 underline decoration-amber-300 underline-offset-4 hover:text-amber-950",
     },
-    stockItemId
+    label
   );
 }
 
@@ -547,14 +550,14 @@ export default async function InstallationDetailPage({
         h(
           "div",
           null,
-          stockLink(asset.stock_item_id),
+          stockLink(asset.stock_item_id, asset.product_description),
           h(
             "p",
             {
               className:
                 "mt-0.5 text-sm text-slate-600",
             },
-            asset.product_description
+            `Serial ${displayValue(asset.product_serial)}`
           )
         ),
         h(
@@ -577,10 +580,6 @@ export default async function InstallationDetailPage({
           displayValue(asset.product_code)
         ),
         detailField(
-          "Serial",
-          displayValue(asset.product_serial)
-        ),
-        detailField(
           "Category",
           displayValue(asset.product_category)
         ),
@@ -600,16 +599,24 @@ export default async function InstallationDetailPage({
           "Stock status",
           displayValue(asset.stock_record_status)
         ),
-        detailField(
-          "Assignment ID",
-          asset.installation_asset_id
-        )
       )
     )
   );
 
-  const eventCards = events.map((event) =>
-    h(
+  const eventCards = events.map((event) => {
+    const relatedAsset = assets.find(
+      (asset) => asset.stock_item_id === event.stock_item_id
+    );
+    const assetLabel = relatedAsset
+      ? `${relatedAsset.product_description} · Serial ${relatedAsset.product_serial}`
+      : "View asset detail";
+    const movementText =
+      event.to_installation_id === installationId
+        ? "Moved into this installation"
+        : event.from_installation_id === installationId
+          ? "Moved out of this installation"
+          : "Related installation movement";
+    return h(
       "article",
       {
         key: event.asset_event_id,
@@ -657,8 +664,8 @@ export default async function InstallationDetailPage({
             "mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4",
         },
         detailField(
-          "Stock item",
-          stockLink(event.stock_item_id)
+          "Asset",
+          stockLink(event.stock_item_id, assetLabel)
         ),
         detailField(
           "Previous lifecycle",
@@ -671,12 +678,8 @@ export default async function InstallationDetailPage({
           displayValue(event.new_lifecycle_status)
         ),
         detailField(
-          "From installation",
-          displayValue(event.from_installation_id)
-        ),
-        detailField(
-          "To installation",
-          displayValue(event.to_installation_id)
+          "Movement",
+          movementText
         ),
         detailField(
           "From warehouse",
@@ -716,8 +719,8 @@ export default async function InstallationDetailPage({
             )
           )
         : null
-    )
-  );
+    );
+  });
 
   return h(
     "main",
@@ -754,7 +757,7 @@ export default async function InstallationDetailPage({
               className:
                 "mt-0.5 text-2xl font-bold text-slate-900",
             },
-            installation.installation_id
+            location?.location_name ?? "Installation"
           ),
           h(
             "p",
@@ -762,15 +765,15 @@ export default async function InstallationDetailPage({
               className:
                 "mt-1 text-base text-slate-700",
             },
-            clientLink(client),
-            h(
-              "span",
-              {
-                className: "text-slate-500",
-              },
-              " / "
-            ),
-            locationLink(location)
+            clientLink(client)
+          ),
+          h(
+            "p",
+            {
+              className:
+                "mt-1 text-xs text-slate-500",
+            },
+            `Installation reference ${installation.installation_id}`
           ),
           h(
             "p",
@@ -887,10 +890,10 @@ export default async function InstallationDetailPage({
           "div",
           {
             className:
-              "mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8",
+              "mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
           },
           detailField(
-            "Installation ID",
+            "Reference",
             installation.installation_id
           ),
           detailField(
@@ -910,16 +913,8 @@ export default async function InstallationDetailPage({
             installation.status
           ),
           detailField(
-            "Client ID",
-            installation.client_id
-          ),
-          detailField(
             "Client",
             clientLink(client)
-          ),
-          detailField(
-            "Location ID",
-            installation.location_id
           ),
           detailField(
             "Location",
@@ -1202,7 +1197,7 @@ export default async function InstallationDetailPage({
           {
             className: "mt-0.5",
           },
-          "This page retrieves installation, client, location, assigned-asset and event information only. It does not create, edit, move, replace, remove or close any records."
+          "This page prioritises client, location, product description and serial number. Internal record identifiers remain available through linked detail and audit records. This page is read-only."
         )
       )
     )
