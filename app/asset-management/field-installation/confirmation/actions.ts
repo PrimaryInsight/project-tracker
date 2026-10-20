@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 import { resolveMappedHardwareIdentity } from "@/lib/get-mapped-hardware-identity";
 
 const ARRANGEMENTS = new Set(["Customer Owned", "Lease Item"]);
@@ -16,7 +16,7 @@ function deriveRole(product: Product): string { const source = [product.product_
 function value(formData: FormData, name: string): string { return String(formData.get(name) ?? "").trim(); }
 function nullable(input: string): string | null { const result = input.trim(); return result || null; }
 function localToday(): string { return new Intl.DateTimeFormat("en-CA", { timeZone: "Pacific/Auckland", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
-function fail(message: string): never { throw new Error(`Preview confirmation blocked: ${message}`); }
+function fail(message: string): never { throw new Error(`Production confirmation blocked: ${message}`); }
 
 export async function confirmPreviewExistingLocationInstallation(formData: FormData) {
   if (["externalUserId", "externalEmail", "hardwareUserId", "userId", "email"].some(name => formData.has(name))) fail("browser-supplied identity values are forbidden");
@@ -37,7 +37,7 @@ export async function confirmPreviewExistingLocationInstallation(formData: FormD
   if (!UUID.test(idempotencyKey)) fail("invalid idempotency key");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(installationDate) || installationDate > localToday()) fail("installation date is missing, invalid, or in the future");
   if (!LOGGER_TYPES.has(loggerType)) fail("unsupported logger type");
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const stockIds = submitted.map(asset => asset.stockItemId);
   const [clientResult, locationResult, stockResult, assignmentResult] = await Promise.all([
     hardware.from("clients").select("client_id,status").eq("client_id", clientId).eq("status", "Active").maybeSingle(),
@@ -59,7 +59,7 @@ export async function confirmPreviewExistingLocationInstallation(formData: FormD
   const payloadAssets = submitted.map(asset => { const stock = stockById.get(asset.stockItemId)!; const product = productById.get(String(stock.product_id)); if (!product) fail(`${asset.stockItemId} has no active product definition`); return { stock_item_id: asset.stockItemId, asset_role: deriveRole(product), asset_arrangement: asset.arrangement, installed_at: installationDate, notes: null }; });
   const payload = { schema_version: 1, idempotency_key: idempotencyKey, client_id: clientId, location_id: locationId, installation: { installation_date: installationDate, installation_type: installationType, crop: nullable(value(formData, "crop")), ftp_id: nullable(value(formData, "ftpId")), logger_id: nullable(value(formData, "loggerId")), logger_type: nullable(loggerType), sim_card: nullable(value(formData, "simCard")), other_sensors: nullable(value(formData, "otherSensors")), notes: nullable(value(formData, "installationNotes")) }, assets: payloadAssets };
   const { data, error } = await hardware.rpc("confirm_existing_location_installation_bridge", { p_external_user_id: identity.externalUserId, p_external_email: identity.externalEmail, p_payload: payload });
-  if (error) { console.error("Preview installation bridge failed", { code: error.code, message: error.message }); fail("the Hardware Database bridge rejected the request"); }
+  if (error) { console.error("Production installation bridge failed", { code: error.code, message: error.message }); fail("the Hardware Database bridge rejected the request"); }
   const receipt = data as { ok?: boolean; installation?: { installation_id?: string }; assets?: unknown[] } | null;
   const installationId = receipt?.installation?.installation_id;
   if (!receipt?.ok || !installationId) fail("the bridge returned an incomplete receipt");

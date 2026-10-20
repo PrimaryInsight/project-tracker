@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createHardwareClient } from "@/lib/hardware-supabase";
-import { resolvePreviewHardwareIdentity } from "@/lib/resolve-preview-hardware-identity";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
+import { resolveMappedHardwareIdentity } from "@/lib/get-mapped-hardware-identity";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -93,8 +93,8 @@ export async function confirmReinstallation(formData: FormData) {
   const sessionEmail = user.email?.trim().toLowerCase() ?? "";
   if (!sessionEmail || !allowedEmail(sessionEmail)) fail("the signed-in email is not approved");
 
-  const identity = await resolvePreviewHardwareIdentity({ userId: user.id, email: user.email });
-  const hardware = createHardwareClient();
+  const identity = await resolveMappedHardwareIdentity({ userId: user.id, email: user.email });
+  const hardware = createHardwareProductionClient();
 
   const payload: Record<string, unknown> = {
     schema_version: 1,
@@ -145,14 +145,14 @@ export async function confirmReinstallation(formData: FormData) {
   });
 
   if (error) {
-    console.error("Preview re-installation bridge failed safely", { code: error.code });
-    fail(error.message || "the Preview bridge rejected the request");
+    console.error("Production re-installation bridge failed safely", { code: error.code });
+    fail(error.message || "the Production bridge rejected the request");
   }
 
   const receipt = data as ReinstallationReceipt | null;
-  if (!receipt || receipt.workflow !== "confirm_reinstallation") fail("the Preview bridge returned an invalid receipt");
-  if (receipt.schema_version !== 1 || receipt.idempotency_key !== idempotencyKey) fail("the Preview bridge returned a mismatched receipt");
-  if (receipt.source_installation_id !== sourceInstallationId) fail("the Preview bridge returned a different source installation");
+  if (!receipt || receipt.workflow !== "confirm_reinstallation") fail("the Production bridge returned an invalid receipt");
+  if (receipt.schema_version !== 1 || receipt.idempotency_key !== idempotencyKey) fail("the Production bridge returned a mismatched receipt");
+  if (receipt.source_installation_id !== sourceInstallationId) fail("the Production bridge returned a different source installation");
   if (!receipt.destination_installation_id || !INSTALLATION_ID.test(receipt.destination_installation_id)) fail("the destination installation was not returned");
   if (!receipt.destination_location_id || !LOCATION_ID.test(receipt.destination_location_id)) fail("the destination location was not returned");
   if (!receipt.asset_count || receipt.asset_count < 1) fail("the receipt contains no moved assets");

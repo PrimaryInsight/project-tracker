@@ -1,7 +1,7 @@
 import { createElement as h } from "react";
 import { redirect } from "next/navigation";
 
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 import NewLocationForm from "./new-location-form";
 
@@ -96,7 +96,7 @@ export default async function NewLocationPage({ searchParams }: Props) {
     return invalidState("The retained workflow identifiers are missing or invalid.");
   }
 
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const [positionResponse, selectedAssignmentResponse, installationResponse] = await Promise.all([
     hardware.from("vw_asset_current_position").select("stock_item_id, product_description, product_serial, lifecycle_status, asset_classification, warehouse, status, installation_id, client_id, client_name, location_id, location_name").eq("stock_item_id", stockItemId).eq("installation_id", sourceInstallationId).limit(2),
     hardware.from("installation_assets").select("installation_asset_id, installation_id, stock_item_id, asset_role, asset_arrangement, assignment_status, removed_at").eq("stock_item_id", stockItemId).eq("assignment_status", "Active").limit(2),

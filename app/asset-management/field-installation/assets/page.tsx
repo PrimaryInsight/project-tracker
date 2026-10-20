@@ -1,7 +1,7 @@
 import { createElement as h, type ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -141,7 +141,7 @@ export default async function AssetSelectionPage({ searchParams }: PageProps) {
   const searchText = one(params.q).trim();
   const search = searchText.toLowerCase();
   const selected = Array.from(new Set(one(params.selected).split(",").map(value => value.trim()).filter(Boolean)));
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
 
   const [clientResult, locationResult, stockResult] = await Promise.all([
     clientId ? hardware.from("clients").select("client_id,client_name,status").eq("client_id", clientId).eq("status", "Active").maybeSingle() : Promise.resolve({ data: null, error: null }),

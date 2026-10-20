@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
-import { createHardwareClient } from "@/lib/hardware-supabase";
-import { resolvePreviewHardwareIdentity } from "@/lib/resolve-preview-hardware-identity";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
+import { resolveMappedHardwareIdentity } from "@/lib/get-mapped-hardware-identity";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -22,9 +22,9 @@ export async function confirmRemovalReplacement(formData:FormData){
  if(removals.some(r=>!INA.test(r.installation_asset_id)))fail("one or more assignment identifiers are invalid"); if(new Set(removals.map(r=>r.installation_asset_id)).size!==removals.length)fail("duplicate assignments are not allowed");
  const replacements=removals.map(r=>r.replacement_stock_item_id).filter((x):x is string=>Boolean(x)); if(replacements.some(x=>!STK.test(x)))fail("one or more replacement identifiers are invalid"); if(new Set(replacements).size!==replacements.length)fail("a replacement stock item may be used only once");
  const pt=await createProjectTrackerClient(); const{data:{user},error:userError}=await pt.auth.getUser(); if(userError||!user)redirect("/login?next=/asset-management/field-installation/remove/review"); const email=user.email?.trim().toLowerCase()??""; if(!email||!allowed(email))fail("the signed-in email is not approved");
- const identity=await resolvePreviewHardwareIdentity({userId:user.id,email:user.email}); const hardware=createHardwareClient();
+ const identity=await resolveMappedHardwareIdentity({userId:user.id,email:user.email}); const hardware=createHardwareProductionClient();
  const payload={schema_version:1,idempotency_key:idempotencyKey,source_installation_id:sourceInstallationId,effective_date:effectiveDate,reason,notes:nullable(notes),removals};
- const{data,error}=await hardware.rpc("confirm_removal_replacement_bridge",{p_external_user_id:identity.externalUserId,p_external_email:identity.externalEmail,p_payload:payload}); if(error){console.error("Preview removal/replacement bridge failed safely",{code:error.code});fail(error.message||"the Preview bridge rejected the request")}
- const receipt=data as Receipt|null; if(!receipt||receipt.workflow!=="confirm_removal_replacement"||receipt.schema_version!==1)fail("the Preview bridge returned an invalid receipt"); if(receipt.idempotency_key!==idempotencyKey||receipt.source_installation_id!==sourceInstallationId)fail("the Preview bridge returned a mismatched receipt"); if(receipt.removal_count!==count||receipt.replacement_count!==replacements.length||!Array.isArray(receipt.assets)||receipt.assets.length!==count)fail("the receipt counts do not match the confirmed workflow"); if(receipt.confirmed_by!==identity.hardwareUserId)fail("the receipt Hardware identity is incorrect"); if(!["Active","Closed"].includes(receipt.installation_status_after??""))fail("the resulting installation status is invalid");
+ const{data,error}=await hardware.rpc("confirm_removal_replacement_bridge",{p_external_user_id:identity.externalUserId,p_external_email:identity.externalEmail,p_payload:payload}); if(error){console.error("Production removal/replacement bridge failed safely",{code:error.code});fail(error.message||"the Production bridge rejected the request")}
+ const receipt=data as Receipt|null; if(!receipt||receipt.workflow!=="confirm_removal_replacement"||receipt.schema_version!==1)fail("the Production bridge returned an invalid receipt"); if(receipt.idempotency_key!==idempotencyKey||receipt.source_installation_id!==sourceInstallationId)fail("the Production bridge returned a mismatched receipt"); if(receipt.removal_count!==count||receipt.replacement_count!==replacements.length||!Array.isArray(receipt.assets)||receipt.assets.length!==count)fail("the receipt counts do not match the confirmed workflow"); if(receipt.confirmed_by!==identity.hardwareUserId)fail("the receipt Hardware identity is incorrect"); if(!["Active","Closed"].includes(receipt.installation_status_after??""))fail("the resulting installation status is invalid");
  redirect(`/asset-management/installation/${encodeURIComponent(sourceInstallationId)}?previewRemovalReplacement=success&replayed=${receipt.replayed?"1":"0"}&removed=${count}&replaced=${replacements.length}&idempotencyKey=${encodeURIComponent(idempotencyKey)}`);
 }

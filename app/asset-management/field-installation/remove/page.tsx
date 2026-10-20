@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +61,7 @@ export default async function RemoveStartPage({ searchParams }: PageProps) {
   const parameters = await searchParams;
   const searchText = (parameters.q ?? "").trim();
   const safeSearch = cleanSearch(searchText);
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const errors: string[] = [];
   let positions: Position[] = [];
   let assignments: Assignment[] = [];

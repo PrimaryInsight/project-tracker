@@ -1,7 +1,7 @@
 import { createElement as h } from "react";
 import { redirect } from "next/navigation";
 
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -114,7 +114,7 @@ export default async function ReinstallationDestinationPage({ searchParams }: Pa
     return invalidState("The retained workflow identifiers are missing or invalid.");
   }
 
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const [positionResponse, assignmentResponse, installationResponse] = await Promise.all([
     hardware
       .from("vw_asset_current_position")

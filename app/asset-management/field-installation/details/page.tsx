@@ -1,7 +1,7 @@
 import { createElement as h, type ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -129,7 +129,7 @@ export default async function InstallationDetailsPage({ searchParams }: PageProp
     return errorPage("Client or Location Not Selected", "Select a client and location before entering installation details.");
   }
 
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const clientResponse = await hardware.from("clients")
     .select("client_id,client_name,contact_name,email,phone,address,status")
     .eq("client_id", clientId).maybeSingle();

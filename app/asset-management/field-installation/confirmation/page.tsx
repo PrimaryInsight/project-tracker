@@ -2,7 +2,7 @@ import { createElement as h, type ReactNode } from "react";
 import { randomUUID } from "crypto";
 import { redirect } from "next/navigation";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 import { confirmPreviewExistingLocationInstallation } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export default async function InstallationConfirmationPage({ searchParams }: Pag
   if (selectedIds.length < 1 || selectedIds.length > 25) return block("Select between 1 and 25 eligible assets.", backHref);
   const arrangements = new Map(selectedIds.map(id => [id, one(params[`arr_${id}`]).trim()]));
   if (selectedIds.some(id => !ARRANGEMENTS.includes(arrangements.get(id) ?? ""))) return block("Every selected asset must have an arrangement.", backHref);
-  const hardware = createHardwareClient();
+  const hardware = createHardwareProductionClient();
   const [clientResult, locationResult, stockResult, assignmentResult] = await Promise.all([
     hardware.from("clients").select("client_id,client_name,status").eq("client_id", clientId).eq("status", "Active").maybeSingle(),
     hardware.from("locations").select("location_id,location_name,client_id,status").eq("location_id", locationId).eq("client_id", clientId).eq("status", "Active").maybeSingle(),

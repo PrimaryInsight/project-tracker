@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createHardwareClient } from "@/lib/hardware-supabase";
+import { createHardwareProductionClient } from "@/lib/hardware-production-supabase";
 import { createClient as createProjectTrackerClient } from "@/lib/supabase/server";
 import { confirmReinstallation } from "./actions";
 import ConfirmButton from "./confirm-button";
@@ -24,7 +24,7 @@ function invalid(message:string){return <main className="min-h-screen bg-slate-1
 async function authorised(next:string){const pt=await createProjectTrackerClient();const {data:{user}}=await pt.auth.getUser();if(!user)redirect(`/login?next=${encodeURIComponent(next)}`);const email=user.email?.trim().toLowerCase()??"";return Boolean(email&&allowed(email));}
 
 async function loadSource(stockItemId:string,sourceInstallationId:string):Promise<{source?:SourceContext;error?:string}>{
- const hw=createHardwareClient();
+ const hw=createHardwareProductionClient();
  const [selectedR,oneR,sourceR]=await Promise.all([
   hw.from("vw_asset_current_position").select("stock_item_id, product_description, product_serial, lifecycle_status, asset_classification, warehouse, status, installation_id, client_id, client_name, location_id, location_name").eq("stock_item_id",stockItemId).eq("installation_id",sourceInstallationId).limit(2),
   hw.from("installation_assets").select("installation_asset_id, installation_id, stock_item_id, asset_role, asset_arrangement, assignment_status, removed_at").eq("stock_item_id",stockItemId).eq("assignment_status","Active").limit(2),
@@ -56,7 +56,7 @@ async function loadDestination(p:Params,source:SourceContext):Promise<{destinati
   return{destination:{mode:"new",name,locationType:"Site",region,notes}};
  }
  const id=value(p,"destinationLocationId");if(!/^LOC[0-9]{5}$/.test(id))return{error:"The existing destination identifier is missing or invalid."};
- const hw=createHardwareClient();const [locationR,activeR]=await Promise.all([
+ const hw=createHardwareProductionClient();const [locationR,activeR]=await Promise.all([
   hw.from("locations").select("location_id, client_id, location_name, location_type, region, status").eq("location_id",id).maybeSingle(),
   hw.from("installations").select("installation_id").eq("location_id",id).eq("status","Active"),
  ]);
