@@ -440,8 +440,7 @@ export default async function StockDetailPage({
           ),
           navigationButton(
             "/asset-management",
-            "Asset Management Home",
-            true
+            "Asset Management Home"
           )
         )
       )
@@ -634,6 +633,11 @@ export default async function StockDetailPage({
           {
             className: "flex flex-wrap gap-2",
           },
+          navigationButton(
+            "/asset-management/stock/receive",
+            "Add Another Stock Item",
+            true
+          ),
           navigationButton(
             `/asset-management/search?q=${encodeURIComponent(
               current.stock_item_id
