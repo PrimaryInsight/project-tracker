@@ -20,7 +20,7 @@ const options: HomeOption[] = [
       "Receive new stock or search for existing stock items and their current position.",
     href: "/asset-management/stock",
     colour: "blue",
-    status: "Current development phase",
+    status: "Operational",
   },
   {
     title: "Field Installation",
@@ -44,7 +44,7 @@ const options: HomeOption[] = [
       "Manage clients, locations, products, stock, installations and history.",
     href: "/asset-management/admin",
     colour: "slate",
-    status: "To be built",
+    status: "Development",
   },
 ];
 
